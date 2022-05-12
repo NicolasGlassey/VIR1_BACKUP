@@ -60,18 +60,18 @@ test('AMICreate_InstanceNotExist_ThrowErrorInvalidParameterValue', async () => {
 })
 
 
-// test('AMIDelete_AMIExist_Success', async () => {
-//     //given
-//     const input = {
-//         'ImageId': imageId,
-//     };
-//     const command = new DeregisterImageCommand(input);
-//     //when
-//     const response = await client.send(command);
-//     //getters are called directly in assertion below
-//     //then
-//     expect(response.$metadata.httpStatusCode).toEqual(200);
-// })
+test('AMIDelete_AMIExist_Success', async () => {
+    //given
+    const image = await ami.find(amiName);
+
+    // when
+    const result = await ami.delete(image.ImageId);
+    const notFindAmi = await ami.find(amiName);
+
+    //then
+    expect(result.$metadata.httpStatusCode).toEqual(200);
+    expect(notFindAmi).toBeUndefined();
+})
 
 // test('AMIDelete_AMINotExist_ThrowError', async () => {
 
