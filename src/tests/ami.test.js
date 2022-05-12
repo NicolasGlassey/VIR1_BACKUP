@@ -34,12 +34,14 @@ test('AMICreate_InstanceNotExist_ThrowInvalidInstanceIDNotFound', async () => {
 
     // given
     const instanceId = "i-04199df6d81374949";
+    const expectedError = 'InvalidInstanceID.NotFound';
+    let error = null;
 
     // when
-    await expect(async () => {
-        await ami.create(amiName, instanceId);
-    })
-        .rejects.toThrow("The instance ID '" + instanceId + "' does not exist");
+    try { await ami.create(amiName, instanceId); } catch (e) { error = e.name; }
+
+    // then
+    expect(error).toEqual(expectedError);
 
 })
 
