@@ -1,7 +1,7 @@
 /**
- * Author : Anthony Bouillant
- * Date : 11.02.2022
- * Description : Test the AMI module
+ * @file      ami.test.js
+ * @brief     This file contains the unit tests for the Ami class.
+ * @author    Created by Anthony Bouillant
  */
 
 "use strict";
@@ -73,18 +73,16 @@ test('AMIDelete_AMIExist_Success', async () => {
     expect(notFindAmi).toBeUndefined();
 })
 
-// test('AMIDelete_AMINotExist_ThrowError', async () => {
+test('AMIDelete_AMINotExist_ThrowError', async () => {
+    //given
+    const imageId = 'ami-063e9f7d72b668f54';
+    const expectedError = 'InvalidAMIID.Unavailable';
+    let error = null;
 
-//     //given
-//     const input = {
-//         'ImageId': imageId,
-//     };
-//     const command = new DeregisterImageCommand(input);
-//     //when
-//     try {
-//         await client.send(command)
-//     } catch (error) {
-//         expect(error.name).toEqual('InvalidAMIID.Unavailable');
-//     }
-// })
+    // when
+    try { await ami.delete(imageId); } catch (e) { error = e.name; }
+
+    // then
+    expect(error).toEqual(expectedError);
+})
 
