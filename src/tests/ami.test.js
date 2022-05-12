@@ -43,21 +43,19 @@ test('AMICreate_InstanceNotExist_ThrowInvalidInstanceIDNotFound', async () => {
 
 })
 
-// test('AMICreate_InstanceNotExist_ThrowErrorInvalidParameterValue', async () => {
-//     const input = {
-//         'InstanceId': 'i-041ererererererer',
-//         'Name': 'ami-jest-1',
-//         'Description': 'ami created by jest',
-//     };
-//     const command = new CreateImageCommand(input);
+test('AMICreate_InstanceNotExist_ThrowErrorInvalidParameterValue', async () => {
+    // given
+    const instanceId = "i-04199df6d8137494zZ";
+    const expectedError = 'InvalidParameterValue';
+    let error = null;
 
-//     try {
-//         await client.send(command)
-//     } catch (error) {
-//         expect(error.name).toEqual('InvalidParameterValue');
-//     }
+    // when
+    try { await ami.create(amiName, instanceId); } catch (e) { error = e.name; }
 
-// })
+    // then
+    expect(error).toEqual(expectedError);
+
+})
 
 
 // test('AMIDelete_AMIExist_Success', async () => {
