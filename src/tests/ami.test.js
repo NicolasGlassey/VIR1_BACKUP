@@ -5,7 +5,7 @@
  */
 
 "use strict";
-const { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand, DescribeImages } = require("@aws-sdk/client-ec2");
+const { EC2Client } = require("@aws-sdk/client-ec2");
 const Ami = require("../ami/Ami.js");
 
 var client, ami;
@@ -30,21 +30,18 @@ test('AMICreate_InstanceExist_RecivedAnAMIID', async () => {
     expect(findAmi.ImageId).toEqual(ami.ami.ImageId);
 })
 
-// test('AMICreate_InstanceNotExist_ThrowInvalidInstanceIDNotFound', async () => {
-//     const input = {
-//         'InstanceId': 'i-04199df6d81374949',
-//         'Name': 'ami-jest-1',
-//         'Description': 'ami created by jest',
-//     };
-//     const command = new CreateImageCommand(input);
+test('AMICreate_InstanceNotExist_ThrowInvalidInstanceIDNotFound', async () => {
 
-//     try {
-//         await client.send(command)
-//     } catch (error) {
-//         expect(error.name).toEqual('InvalidInstanceID.NotFound');
-//     }
+    // given
+    const instanceId = "i-04199df6d81374949";
 
-// })
+    // when
+    await expect(async () => {
+        await ami.create(amiName, instanceId);
+    })
+        .rejects.toThrow("The instance ID '" + instanceId + "' does not exist");
+
+})
 
 // test('AMICreate_InstanceNotExist_ThrowErrorInvalidParameterValue', async () => {
 //     const input = {
