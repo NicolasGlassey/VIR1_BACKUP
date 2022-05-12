@@ -1,7 +1,6 @@
 {
   "name": "vir1_backup",
   "version": "1.0.0",
-  "description": "",
   "directories": {
     "test": "test"
   },
