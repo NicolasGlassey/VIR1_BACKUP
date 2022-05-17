@@ -1,66 +1,63 @@
-const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand } = require("@aws-sdk/client-ec2");
+const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand, DescribeSnapshotsCommand } = require("@aws-sdk/client-ec2");
 
 
 module.exports = class Snapshot {
-    #id;
-    #name;
-    #description;
+    #snapshot;
     #client;
 
-    constructor(name, description, client){
-        this.#name = name;
-        this.#description = description;
+    constructor(client) {
         this.#client = client;
     }
 
-    async static find(name, client){
+    static async find(name, client) {
         const config = {
             'Filters': [
-                {'Name': 'name', 'Values': [name]},
+                { 'Name': 'name', 'Values': [name] },
             ]
         };
 
-        const response = await this.#client.send(new DescribeSnapshotsCommand(config));
+        const response = await client.send(new DescribeSnapshotsCommand(config));
 
         return response.Snapshots[0];
     }
 
-    async create(volumeId){
+    async create(volumeId, name, description = null) {
         const input = {
             'VolumeId': volumeId,
             'TagSpecification': [
-                {'Name': this.#name}
-            ] ,
-            'Description': this.#description
+                { 'Name': name }
+            ],
+            'Description': description
         };
 
         const command = new CreateSnapshotCommand(input);
         const result = await this.#client.send(command);
 
-        if(result.$metadata.httpStatusCode === 200) {
-            this.#id = result.SnapshotId;
+        if (result.$metadata.httpStatusCode === 200) {
+            this.#snapshot = await Snapshot.find(name, this.#client);
         }
 
         return result;
     }
 
-    async delete(){
-        if(!this.#id) {
-            throw new Error('Snapshot not created');
-        }
+    async delete() {
         const input = {
-            'SnapshotId': this.#id
+            'SnapshotId': this.#snapshot.SnapshotId
         }
 
         const command = new DeleteSnapshotCommand(input);
         const result = await this.#client.send(command);
 
-        if(response.$metadata.httpStatusCode === 200) {
-            this.#id = null;
-            this.#name = null;
-            this.#description = null;
+        if (response.$metadata.httpStatusCode === 200) {
+            this.#snapshot = null;
         }
 
         return response;
-
+    }
+    set snapshot(snapshot) {
+        this.#snapshot = snapshot;
+    }
+    get snapshot() {
+        return this.#snapshot;
+    }
 }

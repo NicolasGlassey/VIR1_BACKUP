@@ -1,30 +1,30 @@
 /**
  * Author : Hélène Dubuis
  * Date : 12.05.2022
- * Description : Test the AMI module
+ * Description : Test the Snapshot module
  */
 
 "use strict";
 const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand } = require("@aws-sdk/client-ec2");
 const Snapshot = require("../../src/snapshot/snapshot.js");
 
-var client;
+var client, snapshot;
 
 beforeAll(() => {
     client = new EC2Client({ region: "eu-west-3" });
-    const snapshot = new Snapshot('snapshot-jest-2', 'snapshot created by jest',client);
+    snapshot = new Snapshot(client);
 });
 
 test('SnapshotCreate_VolumeExist_Success', async () => {
     //given
 
     //when
-    const result = snapshot.create('vol-0998fcb8329af98b2');
-    const snapshotCreated = await Snapshot.find('snapshot-jest-2',client);
+    const result = snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-2', 'created by jest');
+    const snapshotCreated = await Snapshot.find('snapshot-jest-2', client);
 
     //then
     expect(result.$metadata.httpStatusCode).toEqual(200);
-    expect(snapshotCreated.SnapshotId).toEqual(snapshot.SnapshotId);
+    expect(snapshotCreated.SnapshotId).toEqual(snapshot.snapshot.SnapshotId);
 })
 
 test('SnapshotCreate_VolumeNotExist_ThowError', async () => {
@@ -35,7 +35,7 @@ test('SnapshotCreate_VolumeNotExist_ThowError', async () => {
 
     //when
     try {
-        await snapshot.createSnapshot(volumeId);
+        await snapshot.create(volumeId, 'snapshot-jest-3', 'created by jest');
     } catch (e) {
         error = e.name;
     }
@@ -47,11 +47,11 @@ test('SnapshotCreate_VolumeNotExist_ThowError', async () => {
 
 test('SnapshotDelete_SnapshotExist_Success', async () => {
     //given
-    await snapshot.create('vol-0998fcb8329af98b2');
+    await snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-4', 'created by jest');
 
     //when
     const result = snapshot.delete();
-    const snapshotDeleted = await Snapshot.find('snapshot-jest-2',client);
+    const snapshotDeleted = await Snapshot.find('snapshot-jest-2', client);
 
     //then
     expect(result.$metadata.httpStatusCode).toEqual(200);
@@ -61,15 +61,17 @@ test('SnapshotDelete_SnapshotExist_Success', async () => {
 
 test('SnapshotDelete_SnapshotNotExist_ThowError', async () => {
     //given
-    const snapshot.id = 'snap-05053c23e57d47411';
+    const snapshotId = 'snap-05053c23e57d47411';
+
+    snapshot.snapshot = { SnapshotId: snapshotId };
+
     const expectedError = 'InvalidSnapshot.NotFound';
     let error = null;
-
     //when
     try {
         await snapshot.delete();
     } catch (e) {
-       error = e.name;
+        error = e.name;
     }
 
     //then
