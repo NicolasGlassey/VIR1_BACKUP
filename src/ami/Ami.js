@@ -56,6 +56,13 @@ module.exports = class Ami {
             'InstanceId': instanceId,
             'Name': amiName,
             'Description': 'ami created by jest',
+            'TagSpecifications': [{
+                'ResourceType': 'image',
+                'Tags': [{
+                    'Key': 'Name',
+                    'Value': amiName
+                }]
+            }]
         };
 
         // Create the image
