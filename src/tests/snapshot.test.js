@@ -19,7 +19,7 @@ test('SnapshotCreate_VolumeExist_Success', async () => {
     //given
 
     //when
-    const result = snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-2', 'created by jest');
+    const result = await snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-2', 'created by jest');
     const snapshotCreated = await Snapshot.find('snapshot-jest-2', client);
 
     //then

@@ -12,7 +12,7 @@ module.exports = class Snapshot {
     static async find(name, client) {
         const config = {
             'Filters': [
-                { 'Name': 'name', 'Values': [name] },
+                { 'Name': 'tag:Name', 'Values': [name] },
             ]
         };
 
@@ -24,9 +24,13 @@ module.exports = class Snapshot {
     async create(volumeId, name, description = null) {
         const input = {
             'VolumeId': volumeId,
-            'TagSpecification': [
-                { 'Name': name }
-            ],
+            'TagSpecifications': [{
+                'ResourceType': 'snapshot',
+                'Tags': [{
+                    'Key': 'Name',
+                    'Value': name,
+                }]
+            }],
             'Description': description
         };
 
