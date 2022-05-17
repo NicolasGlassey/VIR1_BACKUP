@@ -23,7 +23,7 @@ test('AMICreate_InstanceExist_RecivedAnAMIID', async () => {
 
     // when
     const result = await ami.create(amiName, instanceId);
-    const findAmi = await ami.find(amiName);
+    const findAmi = await Ami.find(amiName, client);
 
     // then
     expect(result.$metadata.httpStatusCode).toEqual(200);
@@ -62,11 +62,11 @@ test('AMICreate_InstanceNotExist_ThrowErrorInvalidParameterValue', async () => {
 
 test('AMIDelete_AMIExist_Success', async () => {
     //given
-    const image = await ami.find(amiName);
+    const image = await Ami.find(amiName, client);
 
     // when
     const result = await ami.delete();
-    const notFindAmi = await ami.find(amiName);
+    const notFindAmi = await Ami.find(amiName, client);
 
     //then
     expect(result.$metadata.httpStatusCode).toEqual(200); // 200 = OK

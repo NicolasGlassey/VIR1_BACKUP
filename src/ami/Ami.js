@@ -31,7 +31,7 @@ module.exports = class Ami {
      * @param {string} amiName : the name of the AMI to find. 
      * @returns {object} ami : the AMI found.
      */
-    async find(amiName) {
+    static async find(amiName, client) {
         const config = {
             'Filters': [
                 { 'Name': 'name', 'Values': [amiName] }
@@ -40,7 +40,7 @@ module.exports = class Ami {
 
         // Find the image
         const commandDescribeImages = new DescribeImagesCommand(config);
-        const response = await this.#client.send(commandDescribeImages);
+        const response = await client.send(commandDescribeImages);
 
         return response.Images[0];
     }
@@ -63,7 +63,7 @@ module.exports = class Ami {
         const response = await this.#client.send(command);
 
         if (response.$metadata.httpStatusCode == 200) {
-            this.ami = await this.find(amiName);
+            this.ami = await Ami.find(amiName, this.#client);
         }
 
         return response;
