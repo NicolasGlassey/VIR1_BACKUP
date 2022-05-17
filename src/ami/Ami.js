@@ -74,9 +74,9 @@ module.exports = class Ami {
      * @param {string} imageId : the ID of the AMI to delete.
      * @returns response : the response of the request.
      */
-    async delete(imageId) {
+    async delete() {
         const input = {
-            'ImageId': imageId,
+            'ImageId': this.#ami.ImageId,
         };
 
         // Delete the image

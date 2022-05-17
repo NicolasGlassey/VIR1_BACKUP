@@ -65,22 +65,25 @@ test('AMIDelete_AMIExist_Success', async () => {
     const image = await ami.find(amiName);
 
     // when
-    const result = await ami.delete(image.ImageId);
+    const result = await ami.delete();
     const notFindAmi = await ami.find(amiName);
 
     //then
-    expect(result.$metadata.httpStatusCode).toEqual(200);
-    expect(notFindAmi).toBeUndefined();
+    expect(result.$metadata.httpStatusCode).toEqual(200); // 200 = OK
+    expect(image).not.toEqual(notFindAmi); // image cannot be found
 })
 
 test('AMIDelete_AMINotExist_ThrowError', async () => {
     //given
     const imageId = 'ami-063e9f7d72b668f54';
-    const expectedError = 'InvalidAMIID.Unavailable';
+
+    ami.ami = { "ImageId": imageId }
+
+    const expectedError = 'InvalidAMIID.NotFound';
     let error = null;
 
     // when
-    try { await ami.delete(imageId); } catch (e) { error = e.name; }
+    try { await ami.delete(); } catch (e) { error = e.name; }
 
     // then
     expect(error).toEqual(expectedError);
