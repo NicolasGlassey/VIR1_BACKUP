@@ -5,14 +5,13 @@
  */
 
 "use strict";
-const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand } = require("@aws-sdk/client-ec2");
 const SnapshotHelper = require("../Snapshot/SnapshotHelper.js");
 
-var client, snapshot;
+var clientRegionName, snapshot;
 
 beforeAll(() => {
-    client = new EC2Client({ region: "eu-west-3" });
-    snapshot = new Snapshot(client);
+    clientRegionName = "eu-west-3";
+    snapshot = new Snapshot(clientRegionName);
 });
 
 test('SnapshotCreate_VolumeExist_Success', async () => {
@@ -20,7 +19,7 @@ test('SnapshotCreate_VolumeExist_Success', async () => {
 
     //when
     const result = await snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-2', 'created by jest');
-    const snapshotCreated = await Snapshot.find('snapshot-jest-2', client);
+    const snapshotCreated = await Snapshot.exists('snapshot-jest-2');
 
     //then
     expect(result.$metadata.httpStatusCode).toEqual(200);
@@ -51,7 +50,7 @@ test('SnapshotDelete_SnapshotExist_Success', async () => {
 
     //when
     const result = snapshot.delete();
-    const snapshotDeleted = await Snapshot.find('snapshot-jest-2', client);
+    const snapshotDeleted = await Snapshot.find('snapshot-jest-2');
 
     //then
     expect(result.$metadata.httpStatusCode).toEqual(200);
