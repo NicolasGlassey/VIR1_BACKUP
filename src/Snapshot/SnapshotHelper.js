@@ -24,6 +24,10 @@ module.exports = class SnapshotHelper {
         return snapshot !== undefined;
     }
     async create(volumeId, name, description = null) {
+        if(await this.exists(name)) {
+            throw new Error('Snapshot already exists');
+        }
+
         const input = {
             'VolumeId': volumeId,
             'TagSpecifications': [{
@@ -39,16 +43,19 @@ module.exports = class SnapshotHelper {
         const command = new CreateSnapshotCommand(input);
         const result = await this.#client.send(command);
 
-        console.log(result);
-        if (this.exists(name)) {
-
+        if (await !this.exists(name)) {
+            throw new Error('Snapshot not created');
         }
 
         return result;
     }
 
     async delete(name) {
-        const snapshot = await SnapshotHelper.find(name);
+        const snapshot = await this.find(name);
+
+        if (snapshot === undefined) {
+            throw new Error('Snapshot not exist');
+        }
 
         const input = {
             'SnapshotId': snapshot.SnapshotId
@@ -57,10 +64,11 @@ module.exports = class SnapshotHelper {
         const command = new DeleteSnapshotCommand(input);
         const result = await this.#client.send(command);
 
-        if (!this.exists(name)) {
-
+        if (this.exists(name)) {
+            throw new Error('Snapshot not deleted');
         }
 
-        return response;
+        console.log(result);
+        return result;
     }
 }
