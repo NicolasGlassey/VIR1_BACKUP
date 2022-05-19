@@ -62,10 +62,4 @@ module.exports = class SnapshotHelper {
 
         return response;
     }
-    set snapshot(snapshot) {
-        this.#snapshot = snapshot;
-    }
-    get snapshot() {
-        return this.#snapshot;
-    }
 }
