@@ -4,8 +4,8 @@ const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand, DescribeSnapsho
 module.exports = class SnapshotHelper {
     #client;
 
-    constructor(client) {
-        this.#client = client;
+    constructor(regionName) {
+        this.#client = new EC2Client({ region: regionName });
     }
 
     async find(name) {
