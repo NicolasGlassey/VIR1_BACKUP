@@ -1,7 +1,7 @@
 const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand, DescribeSnapshotsCommand } = require("@aws-sdk/client-ec2");
 
 
-module.exports = class Snapshot {
+module.exports = class SnapshotHelper {
     #snapshot;
     #client;
 

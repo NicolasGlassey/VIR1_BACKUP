@@ -6,7 +6,7 @@
 
 "use strict";
 const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand } = require("@aws-sdk/client-ec2");
-const Snapshot = require("../../src/snapshot/snapshot.js");
+const SnapshotHelper = require("../Snapshot/SnapshotHelper.js");
 
 var client, snapshot;
 
