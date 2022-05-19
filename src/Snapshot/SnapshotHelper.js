@@ -19,8 +19,8 @@ module.exports = class SnapshotHelper {
 
         return response.Snapshots[0];
     }
-    async exists() {
-        const snapshot = await SnapshotHelper.find(this.#snapshot.snapshot.SnapshotId, this.#client);
+    async exists(name) {
+        const snapshot = await this.find(name);
         return snapshot !== undefined;
     }
     async create(volumeId, name, description = null) {
@@ -39,8 +39,9 @@ module.exports = class SnapshotHelper {
         const command = new CreateSnapshotCommand(input);
         const result = await this.#client.send(command);
 
-        if (result.$metadata.httpStatusCode === 200) {
-            this.#snapshot = await Snapshot.find(name, this.#client);
+        console.log(result);
+        if (this.exists(name)) {
+
         }
 
         return result;
@@ -56,8 +57,8 @@ module.exports = class SnapshotHelper {
         const command = new DeleteSnapshotCommand(input);
         const result = await this.#client.send(command);
 
-        if (response.$metadata.httpStatusCode === 200) {
-            this.#snapshot = null;
+        if (!this.exists(name)) {
+
         }
 
         return response;
