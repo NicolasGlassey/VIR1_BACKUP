@@ -2,21 +2,20 @@ const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand, DescribeSnapsho
 
 
 module.exports = class SnapshotHelper {
-    #snapshot;
     #client;
 
     constructor(client) {
         this.#client = client;
     }
 
-    static async find(name, client) {
+    async find(name) {
         const config = {
             'Filters': [
                 { 'Name': 'tag:Name', 'Values': [name] },
             ]
         };
 
-        const response = await client.send(new DescribeSnapshotsCommand(config));
+        const response = await this.#client.send(new DescribeSnapshotsCommand(config));
 
         return response.Snapshots[0];
     }
@@ -47,8 +46,8 @@ module.exports = class SnapshotHelper {
         return result;
     }
 
-    async delete(name, client) {
-        const snapshot = await SnapshotHelper.find(name, client);
+    async delete(name) {
+        const snapshot = await SnapshotHelper.find(name);
 
         const input = {
             'SnapshotId': snapshot.SnapshotId
