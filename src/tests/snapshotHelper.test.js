@@ -16,16 +16,37 @@ beforeAll(() => {
 
 test('SnapshotCreate_VolumeExist_Success', async () => {
     //given
+    const name = 'snapshot-jest-1';
+    const id = 'vol-0998fcb8329af98b2';
+    const description = 'created by jest';
 
     //when
-    const result = await snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-2', 'created by jest');
-    const snapshotCreated = await snapshot.exists('snapshot-jest-2');
+    const result = await snapshot.create(id, name, description);
+    const snapshotCreated = await snapshot.exists('snapshot-jest-1');
 
-    console.log(result);
     //then
-    expect(result.$metadata.httpStatusCode).toEqual(200);
-    expect(snapshotCreated.SnapshotId).toEqual(snapshot.snapshot.SnapshotId);
+
+    expect(snapshotCreated).toBeTruthy();
 })
+
+test('SnapshotCreate_SnapshotAlreadyExist_Error', async () => {
+    //given
+    const name = 'snapshot-jest-2';
+    const id = 'vol-0998fcb8329af98b2';
+    const description = 'created by jest';
+    const expectedError = 'Snapshot already exists';
+    await snapshot.create(id, name, description);
+
+    //when
+    try {
+        await snapshot.create(id, name, description);
+    } catch (e) {
+        error = e.message;
+    }
+
+    expect(error).toEqual(expectedError);
+})
+
 
 test('SnapshotCreate_VolumeNotExist_ThowError', async () => {
     //given
@@ -50,28 +71,25 @@ test('SnapshotDelete_SnapshotExist_Success', async () => {
     await snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-4', 'created by jest');
 
     //when
-    const result = snapshot.delete();
-    const snapshotDeleted = await Snapshot.find('snapshot-jest-2');
+    const result = await snapshot.delete('snapshot-jest-4');
+    const snapshotDeleted = await snapshot.exists('snapshot-jest-4');
 
     //then
-    expect(result.$metadata.httpStatusCode).toEqual(200);
-    expect(snapshotDeleted).toBeUndefined();
+    expect(snapshotDeleted).toBeFalsy();
 
 })
 
 test('SnapshotDelete_SnapshotNotExist_ThowError', async () => {
     //given
-    const snapshotId = 'snap-05053c23e57d47411';
+    const snapshotName = 'snapshot-jest-5';
 
-    snapshot.snapshot = { SnapshotId: snapshotId };
-
-    const expectedError = 'InvalidSnapshot.NotFound';
+    const expectedError = 'Snapshot not exist';
     let error = null;
     //when
     try {
-        await snapshot.delete();
+        await snapshot.delete(snapshotName);
     } catch (e) {
-        error = e.name;
+        error = e.message;
     }
 
     //then
