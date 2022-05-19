@@ -20,7 +20,10 @@ module.exports = class SnapshotHelper {
 
         return response.Snapshots[0];
     }
-
+    async exists() {
+        const snapshot = await SnapshotHelper.find(this.#snapshot.snapshot.SnapshotId, this.#client);
+        return snapshot !== undefined;
+    }
     async create(volumeId, name, description = null) {
         const input = {
             'VolumeId': volumeId,
