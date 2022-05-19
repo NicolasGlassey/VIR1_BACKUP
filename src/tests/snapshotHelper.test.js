@@ -11,7 +11,7 @@ var clientRegionName, snapshot;
 
 beforeAll(() => {
     clientRegionName = "eu-west-3";
-    snapshot = new Snapshot(clientRegionName);
+    snapshot = new SnapshotHelper(clientRegionName);
 });
 
 test('SnapshotCreate_VolumeExist_Success', async () => {
@@ -19,8 +19,9 @@ test('SnapshotCreate_VolumeExist_Success', async () => {
 
     //when
     const result = await snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-2', 'created by jest');
-    const snapshotCreated = await Snapshot.exists('snapshot-jest-2');
+    const snapshotCreated = await snapshot.exists('snapshot-jest-2');
 
+    console.log(result);
     //then
     expect(result.$metadata.httpStatusCode).toEqual(200);
     expect(snapshotCreated.SnapshotId).toEqual(snapshot.snapshot.SnapshotId);
