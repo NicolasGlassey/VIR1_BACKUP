@@ -47,9 +47,11 @@ module.exports = class SnapshotHelper {
         return result;
     }
 
-    async delete() {
+    async delete(name, client) {
+        const snapshot = await SnapshotHelper.find(name, client);
+
         const input = {
-            'SnapshotId': this.#snapshot.SnapshotId
+            'SnapshotId': snapshot.SnapshotId
         }
 
         const command = new DeleteSnapshotCommand(input);
