@@ -24,7 +24,7 @@ module.exports = class SnapshotHelper {
         return snapshot !== undefined;
     }
     async create(volumeId, name, description = null) {
-        if(await this.exists(name)) {
+        if (await this.exists(name)) {
             throw new Error('Snapshot already exists');
         }
 
@@ -41,6 +41,7 @@ module.exports = class SnapshotHelper {
         };
 
         const command = new CreateSnapshotCommand(input);
+        //TODO: check if snapshot status is available
         const result = await this.#client.send(command);
 
         if (await !this.exists(name)) {
