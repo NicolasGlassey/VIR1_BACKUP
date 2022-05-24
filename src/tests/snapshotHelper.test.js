@@ -35,8 +35,6 @@ test('SnapshotCreate_SnapshotAlreadyExist_Error', async () => {
     const id = 'vol-0998fcb8329af98b2';
     const description = 'created by jest';
     const expectedError = 'Snapshot already exists';
-    await snapshot.create(id, name, description);
-
     //when
     try {
         await snapshot.create(id, name, description);
