@@ -6,28 +6,26 @@
 
 "use strict";
 const { EC2Client } = require("@aws-sdk/client-ec2");
-const Ami = require("../ami/Ami.js");
+const Ami = require("../ami/AmiHelper.js");
 
-var client, ami;
+var ami;
 const amiName = "ami-jest-1";
 
 beforeAll(() => {
-    client = new EC2Client({ region: "eu-west-3" });
-    ami = new Ami(client);
+    ami = new Ami("eu-west-3");
 });
 
 test('AMICreate_InstanceExist_RecivedAnAMIID', async () => {
 
     // given
     const instanceId = "i-04199df6d81374547";
-
-    // when
+    //when
     const result = await ami.create(amiName, instanceId);
-    const findAmi = await Ami.find(amiName, client);
+    const amiCreated = await ami.exists('ami-jest-1');
 
-    // then
-    expect(result.$metadata.httpStatusCode).toEqual(200);
-    expect(findAmi.ImageId).toEqual(ami.ami.ImageId);
+    //then
+
+    expect(amiCreated).toBeTruthy();
 })
 
 test('AMICreate_InstanceNotExist_ThrowInvalidInstanceIDNotFound', async () => {
@@ -61,29 +59,23 @@ test('AMICreate_InstanceNotExist_ThrowErrorInvalidParameterValue', async () => {
 
 
 test('AMIDelete_AMIExist_Success', async () => {
-    //given
-    const image = await Ami.find(amiName, client);
 
     // when
-    const result = await ami.delete();
-    const notFindAmi = await Ami.find(amiName, client);
+    const result = await ami.delete(amiName);
+    const amiDeleted = await ami.exists(amiName);
 
     //then
-    expect(result.$metadata.httpStatusCode).toEqual(200); // 200 = OK
-    expect(image).not.toEqual(notFindAmi); // image cannot be found
+    expect(amiDeleted).toBeFalsy();
+
 })
 
 test('AMIDelete_AMINotExist_ThrowError', async () => {
-    //given
-    const imageId = 'ami-063e9f7d72b668f54';
 
-    ami.ami = { "ImageId": imageId }
-
-    const expectedError = 'InvalidAMIID.NotFound';
+    const expectedError = 'Ami not exist';
     let error = null;
 
     // when
-    try { await ami.delete(); } catch (e) { error = e.name; }
+    try { await ami.delete(amiName); } catch (e) { error = e.message; }
 
     // then
     expect(error).toEqual(expectedError);

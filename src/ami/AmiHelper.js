@@ -7,14 +7,12 @@
  */
 
 "use strict";
-
-const { CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand } = require("@aws-sdk/client-ec2");
+const { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand } = require("@aws-sdk/client-ec2");
 
 module.exports = class Ami {
 
     // #region Private members
     #client;
-    #ami;
     // #endregion
 
     // #region Public members
@@ -22,8 +20,8 @@ module.exports = class Ami {
      * @brief This method constructs an Ami object.
      * @param {EC2Client} client : the client used to communicate with the AWS API. 
      */
-    constructor(client) {
-        this.#client = client;
+    constructor(regionName) {
+        this.#client = new EC2Client({ region: regionName });
     }
 
     /**
@@ -31,7 +29,7 @@ module.exports = class Ami {
      * @param {string} amiName : the name of the AMI to find. 
      * @returns {object} ami : the AMI found.
      */
-    static async find(amiName, client) {
+    async find(amiName) {
         const config = {
             'Filters': [
                 { 'Name': 'name', 'Values': [amiName] }
@@ -40,9 +38,14 @@ module.exports = class Ami {
 
         // Find the image
         const commandDescribeImages = new DescribeImagesCommand(config);
-        const response = await client.send(commandDescribeImages);
+        const response = await this.#client.send(commandDescribeImages);
 
         return response.Images[0];
+    }
+
+    async exists(name) {
+        const ami = await this.find(name);
+        return ami !== undefined;
     }
 
     /**
@@ -69,8 +72,8 @@ module.exports = class Ami {
         const command = new CreateImageCommand(input);
         const response = await this.#client.send(command);
 
-        if (response.$metadata.httpStatusCode == 200) {
-            this.ami = await Ami.find(amiName, this.#client);
+        if (await !this.exists(amiName)) {
+            throw new Error('Snapshot not created');
         }
 
         return response;
@@ -81,34 +84,24 @@ module.exports = class Ami {
      * @param {string} imageId : the ID of the AMI to delete.
      * @returns response : the response of the request.
      */
-    async delete() {
+    async delete(amiName) {
+        const image = await this.find(amiName);
+
+        if (image === undefined) throw new Error('Ami not exist');
+
         const input = {
-            'ImageId': this.#ami.ImageId,
+            'ImageId': image.ImageId,
         };
 
         // Delete the image
         const command = new DeregisterImageCommand(input);
         const response = await this.#client.send(command);
 
-        if (response.$metadata.httpStatusCode == 200) this.ami = null;
+        if (await this.exists(amiName)) {
+            throw new Error('Ami not exist');
+        }
 
         return response;
-    }
-
-    /**
-     * @brief This method is used to set the ami.
-     * @param {Ami} ami : the ami to set.
-     */
-    set ami(ami) {
-        this.#ami = ami
-    }
-
-    /**
-     * @brief This method is used to get the ami.
-     * @returns {Ami} ami : this ami.
-     */
-    get ami() {
-        return this.#ami;
     }
     // #endregion
 
