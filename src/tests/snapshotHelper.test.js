@@ -1,95 +1,101 @@
 /**
  * Author : Hélène Dubuis
  * Date : 12.05.2022
- * Description : Test the Snapshot module
+ * Description : Test the SnapshotHelper Class
  */
 
 "use strict";
 const SnapshotHelper = require("../Snapshot/SnapshotHelper.js");
 
-var clientRegionName, snapshot;
+let clientRegionName, snapshotHelper;
+let snapshotName, volumeName;
 
 beforeAll(() => {
     clientRegionName = "eu-west-3";
-    snapshot = new SnapshotHelper(clientRegionName);
+    snapshotHelper = new SnapshotHelper(clientRegionName);
+    snapshotName = "";
+    volumeName = "";
 });
 
-test('SnapshotCreate_VolumeExist_Success', async () => {
+test('exist_SnapshotExist_Success', async () => {
     //given
-    const name = 'snapshot-jest-1';
-    const id = 'vol-0998fcb8329af98b2';
-    const description = 'created by jest';
+    snapshotName = 'snapshot-jest-1';
 
     //when
-    const result = await snapshot.create(id, name, description);
-    const snapshotCreated = await snapshot.exists('snapshot-jest-1');
+    //event directly called in the assertion
 
     //then
-
-    expect(snapshotCreated).toBeTruthy();
+    expect(await snapshotHelper.exists(snapshotName)).toBe(true);
 })
 
-test('SnapshotCreate_SnapshotAlreadyExist_Error', async () => {
+test('exist_SnapshotNotExist_Success', async () => {
     //given
-    const name = 'snapshot-jest-2';
-    const id = 'vol-0998fcb8329af98b2';
-    const description = 'created by jest';
-    const expectedError = 'Snapshot already exists';
-    //when
-    try {
-        await snapshot.create(id, name, description);
-    } catch (e) {
-        error = e.message;
-    }
-
-    expect(error).toEqual(expectedError);
-})
-
-
-test('SnapshotCreate_VolumeNotExist_ThowError', async () => {
-    //given
-    const volumeId = 'vol-0998fcb8329af9800';
-    const expectedError = 'InvalidVolume.NotFound';
-    let error = null;
+    snapshotName = 'snapshot-jest-X';
 
     //when
-    try {
-        await snapshot.create(volumeId, 'snapshot-jest-3', 'created by jest');
-    } catch (e) {
-        error = e.name;
-    }
+    //event directly called in the assertion
 
     //then
-    expect(error).toEqual(expectedError);
-
+    expect(await snapshotHelper.exists(snapshotName)).toBe(false);
 })
 
-test('SnapshotDelete_SnapshotExist_Success', async () => {
+test('create_VolumeExist_Success', async () => {
     //given
-    await snapshot.create('vol-0998fcb8329af98b2', 'snapshot-jest-4', 'created by jest');
+    snapshotName = 'snapshot-jest-1';
+    volumeName = 'volumeName';
 
     //when
-    const result = await snapshot.delete('snapshot-jest-4');
-    const snapshotDeleted = await snapshot.exists('snapshot-jest-4');
+    await snapshotHelper.create(volumeName, snapshotName);
 
     //then
-    expect(snapshotDeleted).toBeFalsy();
-
+    expect(await snapshotHelper.exists(snapshotName).toBe(true));
 })
 
-test('SnapshotDelete_SnapshotNotExist_ThowError', async () => {
+test('create_SnapshotAlreadyExist_ThrowException', async () => {
     //given
-    const snapshotName = 'snapshot-jest-5';
+    snapshotName = 'snapshot-jest-1';
+    volumeName = 'volumeName';
 
-    const expectedError = 'Snapshot not exist';
-    let error = null;
     //when
-    try {
-        await snapshot.delete(snapshotName);
-    } catch (e) {
-        error = e.message;
-    }
+    expect(() => await snapshotHelper.create(volumeName, name)).toThrow(SnapshotAlreadyExistException);
 
     //then
-    expect(error).toEqual(expectedError);
+    //Exception thrown
+})
+
+
+test('create_VolumeNotExist_ThrowException', async () => {
+    //given
+    snapshotName = 'snapshot-jest-1';
+    volumeName = 'volumeNameNotExist';
+
+    //when
+    expect(() => await snapshotHelper.create(volumeName, snapshotName)).toThrow(VolumeNotFoundException);
+
+    //then
+    //Exception thrown
+})
+
+test('snapshotDelete_SnapshotExist_Success', async () => {
+    //given
+    await snapshotHelper.create(volumeName, snapshotName);
+    expect(await snapshotHelper.exists('snapshot-jest-4').toBe(true));
+
+    //when
+    await snapshotHelper.delete('snapshot-jest-4');
+
+    //then
+    expect(await snapshotHelper.exists('snapshot-jest-4').toBe(false));
+})
+
+test('SnapshotDelete_SnapshotNotExist_ThrowError', async () => {
+    //given
+    snapshotName = 'snapshot-jest-5';
+    expect(await snapshotHelper.exists('snapshot-jest-4').toBe(false));
+
+    //when
+    expect(() => await snapshotHelper.delete(snapshotName)).toThrow(SnapshotNotFoundException);
+
+    //then
+    //Exception thrown
 })
