@@ -5,79 +5,90 @@
  */
 
 "use strict";
-const { EC2Client } = require("@aws-sdk/client-ec2");
 const Ami = require("../ami/AmiHelper.js");
 
-var ami;
-const amiName = "ami-jest-1";
+let ami;
+let amiName;
 
 beforeAll(() => {
     ami = new Ami("eu-west-3");
+    amiName = "team-backup-ami-jest-1";
 });
 
-test('AMICreate_InstanceExist_RecivedAnAMIID', async () => {
+test('exists_AmiExist_Success', async () => {
 
-    // given
-    const instanceId = "i-04199df6d81374547";
+    //given
+    //refer to beforeAll
+    let actualResult;
+    let expectedResult = true;
+
     //when
-    const result = await ami.create(amiName, instanceId);
-    const amiCreated = await ami.exists('ami-jest-1');
+    actualResult = await ami.exists(amiName);
 
     //then
-
-    expect(amiCreated).toBeTruthy();
+    expect(actualResult.toBe(expectedResult));
 })
 
-test('AMICreate_InstanceNotExist_ThrowInvalidInstanceIDNotFound', async () => {
+test('exists_AmiNotExist_Success', async () => {
 
-    // given
-    const instanceId = "i-04199df6d81374949";
-    const expectedError = 'InvalidInstanceID.NotFound';
-    let error = null;
+    //given
+    //refer to beforeAll
+    let actualResult;
+    let expectedResult = false;
 
-    // when
-    try { await ami.create(amiName, instanceId); } catch (e) { error = e.name; }
-
-    // then
-    expect(error).toEqual(expectedError);
-
-})
-
-test('AMICreate_InstanceNotExist_ThrowErrorInvalidParameterValue', async () => {
-    // given
-    const instanceId = "i-04199df6d8137494zZ";
-    const expectedError = 'InvalidParameterValue';
-    let error = null;
-
-    // when
-    try { await ami.create(amiName, instanceId); } catch (e) { error = e.name; }
-
-    // then
-    expect(error).toEqual(expectedError);
-
-})
-
-
-test('AMIDelete_AMIExist_Success', async () => {
-
-    // when
-    const result = await ami.delete(amiName);
-    const amiDeleted = await ami.exists(amiName);
+    //when
+    actualResult = await ami.exists(amiName);
 
     //then
-    expect(amiDeleted).toBeFalsy();
+    expect(actualResult.toBe(expectedResult));
+})
+
+test('create_InstanceExist_Success', async () => {
+
+    //given
+    let instanceName = "team-backup-instance-for-ami";
+
+    //when
+    await ami.create(amiName, instanceName);
+
+    //then
+    expect(await ami.exists(amiName).toBe(true));
+})
+
+test('create_InstanceNotExist_ThrowException', async () => {
+
+    // given
+    let instanceName = "team-backup-instance-not-exist";
+
+    // when
+    expect(() => await ami.create(amiName, instanceName)).toThrow(InstanceNotFoundException);
+
+    // then
+    // Exception thrown
 
 })
 
-test('AMIDelete_AMINotExist_ThrowError', async () => {
+test('delete_AmiExist_Success', async () => {
 
-    const expectedError = 'Ami not exist';
-    let error = null;
+    //given
+    expect(await ami.exists(amiName).toBe(true));
 
     // when
-    try { await ami.delete(amiName); } catch (e) { error = e.message; }
+    await ami.delete(amiName);
 
-    // then
-    expect(error).toEqual(expectedError);
+    //then
+    expect(await ami.exists(amiName).toBe(false));
+})
+
+test('delete_AmiNotExist_ThrowException', async () => {
+
+    //given
+    expect(await ami.exists(amiName).toBe(true));
+
+    // when
+    expect(() => await ami.delete(amiName)).toThrow(AmiNotFoundException);
+
+    //then
+    //Exception thrown
 })
 
