@@ -5,7 +5,7 @@
  */
 
 "use strict";
-const SnapshotHelper = require("../Snapshot/SnapshotHelper.js");
+const SnapshotHelper = require("../snapshot/SnapshotHelper.js");
 
 let clientRegionName, snapshotHelper;
 let snapshotName, volumeName;
