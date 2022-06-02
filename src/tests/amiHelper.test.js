@@ -2,51 +2,48 @@
  * @file      ami.test.js
  * @brief     This file contains the unit tests for the Ami class.
  * @author    Created by Anthony Bouillant
+ * @url       https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/index.html
  */
 
 "use strict";
-const Ami = require("../ami/AmiHelper.js");
+const Ami = require("../ami/AmiHelper.js").default;
 
-let ami;
-let amiName;
+let ami, amiName, actualResult, expectedResult, instanceName;
 
 beforeAll(() => {
     ami = new Ami("eu-west-3");
     amiName = "team-backup-ami-jest-1";
+    instanceName = "";
+    actualResult = undefined;
+    expectedResult = undefined;
 });
 
 test('exists_AmiExist_Success', async () => {
 
     //given
-    //refer to beforeAll
-    let actualResult;
-    let expectedResult = true;
 
     //when
     actualResult = await ami.exists(amiName);
 
     //then
-    expect(actualResult.toBe(expectedResult));
+    expect(actualResult.toBe(true));
 })
 
 test('exists_AmiNotExist_Success', async () => {
 
     //given
-    //refer to beforeAll
-    let actualResult;
-    let expectedResult = false;
 
     //when
     actualResult = await ami.exists(amiName);
 
     //then
-    expect(actualResult.toBe(expectedResult));
+    expect(actualResult.toBe(false));
 })
 
 test('create_InstanceExist_Success', async () => {
 
     //given
-    let instanceName = "team-backup-instance-for-ami";
+    instanceName = "team-backup-instance-for-ami";
 
     //when
     await ami.create(amiName, instanceName);
@@ -58,10 +55,10 @@ test('create_InstanceExist_Success', async () => {
 test('create_InstanceNotExist_ThrowException', async () => {
 
     // given
-    let instanceName = "team-backup-instance-not-exist";
+    instanceName = "team-backup-instance-not-exist";
 
     // when
-    expect(() => await ami.create(amiName, instanceName)).toThrow(InstanceNotFoundException);
+    expect(() => await ami.create(amiName, instanceName)).toThrow('InstanceNotFoundException');
 
     // then
     // Exception thrown
