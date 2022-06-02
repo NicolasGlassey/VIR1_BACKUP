@@ -7,9 +7,14 @@
  */
 
 "use strict";
-const { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand } = require("@aws-sdk/client-ec2");
+import { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand } from "@aws-sdk/client-ec2";
+import AmiAlreadyExistsException from "./exceptions/AmiAlreadyExistsException";
+import AmiDeleteException from "./exceptions/AmiDeleteException";
+import AmiDoesNotExist from "./exceptions/AmiDoesNotExist";
+import AmiNotCreatedException from "./exceptions/AmiCreateException";
 
-module.exports = class Ami {
+
+export default class Ami {
 
     // #region Private members
     #client;
@@ -26,13 +31,13 @@ module.exports = class Ami {
 
     /**
      * @brief This method is used to find an AMI.
-     * @param {string} amiName : the name of the AMI to find. 
+     * @param {string} name : the name of the AMI to find. 
      * @returns {object} ami : the AMI found.
      */
-    async find(amiName) {
+    async find(name) {
         const config = {
             'Filters': [
-                { 'Name': 'name', 'Values': [amiName] }
+                { 'Name': 'name', 'Values': [name] }
             ]
         }
 
@@ -50,20 +55,25 @@ module.exports = class Ami {
 
     /**
      * @brief This method is used to create an AMI from an instance.
-     * @param {string} amiName : the name of the AMI to create. 
+     * @param {string} name : the name of the AMI to create. 
      * @param  {string} instanceId : the instance ID from which the AMI will be created.
      * @returns response : the response of the request.
      */
-    async create(amiName, instanceId) {
+    async create(name, instanceId) {
+
+        if (await this.exists(name)) {
+            throw new AmiAlreadyExistsException('Ami already exists');
+        }
+
         const input = {
             'InstanceId': instanceId,
-            'Name': amiName,
+            'Name': name,
             'Description': 'ami created by jest',
             'TagSpecifications': [{
                 'ResourceType': 'image',
                 'Tags': [{
                     'Key': 'Name',
-                    'Value': amiName
+                    'Value': name
                 }]
             }]
         };
@@ -72,8 +82,8 @@ module.exports = class Ami {
         const command = new CreateImageCommand(input);
         const response = await this.#client.send(command);
 
-        if (await !this.exists(amiName)) {
-            throw new Error('Snapshot not created');
+        if (await !this.exists(name)) {
+            throw new AmiNotCreatedException('Ami not created');
         }
 
         return response;
@@ -84,24 +94,22 @@ module.exports = class Ami {
      * @param {string} imageId : the ID of the AMI to delete.
      * @returns response : the response of the request.
      */
-    async delete(amiName) {
-        const image = await this.find(amiName);
+    async delete(name) {
+        const ami = await this.find(name);
 
-        if (image === undefined) throw new Error('Ami not exist');
+        if (ami === undefined) throw new AmiDoesNotExist('Ami does not exist');
 
         const input = {
-            'ImageId': image.ImageId,
+            'ImageId': ami.ImageId,
         };
 
         // Delete the image
         const command = new DeregisterImageCommand(input);
-        const response = await this.#client.send(command);
+        await this.#client.send(command);
 
-        if (await this.exists(amiName)) {
-            throw new Error('Ami not exist');
+        if (await this.exists(name)) {
+            throw new AmiDeleteException('Ami Still Exists');
         }
-
-        return response;
     }
     // #endregion
 
