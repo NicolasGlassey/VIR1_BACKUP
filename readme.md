@@ -1,4 +1,13 @@
+# README
+
 # Dev Team Backup and Archive
+
+## Installation
+
+Pré-requis :
+
+* npm 8.3.0 ou ultérieure
+* node 16.10.0 ou ultérieure
 
 ## Réaliser/Supprimer une AMI (image d'une instance)
 ## Réaliser/Supprimer un snasphot d'un volume
