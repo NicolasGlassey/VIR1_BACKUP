@@ -1,2 +1,2 @@
-export default class AmiException extends Error {
+module.exports = class AmiException extends Error {
 }
