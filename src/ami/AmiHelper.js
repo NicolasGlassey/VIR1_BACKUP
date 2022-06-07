@@ -7,14 +7,15 @@
  */
 
 "use strict";
-import { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand } from "@aws-sdk/client-ec2";
-import AmiAlreadyExistsException from "./exceptions/AmiAlreadyExistsException";
-import AmiDeleteException from "./exceptions/AmiDeleteException";
-import AmiDoesNotExist from "./exceptions/AmiDoesNotExist";
-import AmiNotCreatedException from "./exceptions/AmiCreateException";
+const { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand, DescribeInstancesCommand } = require("@aws-sdk/client-ec2");
+const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundException.js");
+const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js");
+const AmiAlreadyExistException = require("../ami/exceptions/AmiAlreadyExistException.js");
+const AmiCreationException = require("../ami/exceptions/AmiCreationException.js");
+const AmiDeletionException = require("../ami/exceptions/AmiDeletionException.js");
 
 
-export default class Ami {
+module.exports = class Ami {
 
     // #region Private members
     #client;
@@ -53,17 +54,45 @@ export default class Ami {
         return ami !== undefined;
     }
 
+    async findInstance(name) {
+        const input = {
+            'Filters': [
+                { 'Name': 'tag:Name', 'Values': [name] }
+            ]
+        }
+        const command = new DescribeInstancesCommand(input);
+        const response = await this.#client.send(command);
+
+        return response.Reservations;
+    }
+
+    async existsInstance(name) {
+        const instances = await this.findInstance(name);
+        return instances.length > 0;
+    }
+
+    async getInstanceId(name) {
+        const instances = await this.findInstance(name);
+        return instances[0].Instances[0].InstanceId;
+    }
+
     /**
      * @brief This method is used to create an AMI from an instance.
      * @param {string} name : the name of the AMI to create. 
-     * @param  {string} instanceId : the instance ID from which the AMI will be created.
+     * @param  {string} instanceName : the instance ID from which the AMI will be created.
      * @returns response : the response of the request.
      */
-    async create(name, instanceId) {
+    async create(name, instanceName) {
+
+        if (!await this.existsInstance(instanceName)) {
+            throw new InstanceNotFoundException('Instance not found');
+        }
 
         if (await this.exists(name)) {
-            throw new AmiAlreadyExistsException('Ami already exists');
+            throw new AmiAlreadyExistException('Ami already exists');
         }
+
+        let instanceId = await this.getInstanceId(instanceName);
 
         const input = {
             'InstanceId': instanceId,
@@ -80,10 +109,11 @@ export default class Ami {
 
         // Create the image
         const command = new CreateImageCommand(input);
-        const response = await this.#client.send(command);
-
-        if (await !this.exists(name)) {
-            throw new AmiNotCreatedException('Ami not created');
+        let response;
+        try {
+            response = await this.#client.send(command)
+        } catch (error) {
+            throw new AmiCreationException('Ami creation failed');
         }
 
         return response;
@@ -97,7 +127,7 @@ export default class Ami {
     async delete(name) {
         const ami = await this.find(name);
 
-        if (ami === undefined) throw new AmiDoesNotExist('Ami does not exist');
+        if (ami === undefined) throw new AmiNotFoundException('Ami does not exist');
 
         const input = {
             'ImageId': ami.ImageId,
@@ -106,10 +136,6 @@ export default class Ami {
         // Delete the image
         const command = new DeregisterImageCommand(input);
         await this.#client.send(command);
-
-        if (await this.exists(name)) {
-            throw new AmiDeleteException('Ami Still Exists');
-        }
     }
     // #endregion
 

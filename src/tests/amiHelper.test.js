@@ -6,7 +6,12 @@
  */
 
 "use strict";
-const Ami = require("../ami/AmiHelper.js").default;
+const Ami = require("../ami/AmiHelper");
+const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundException.js").default;
+const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js").default;
+const AmiAlreadyExistException = require("../ami/exceptions/AmiAlreadyExistException.js").default;
+const AmiCreationException = require("../ami/exceptions/AmiCreationException.js").default;
+const AmiDeletionException = require("../ami/exceptions/AmiDeletionException.js").default;
 
 let ami, amiName, actualResult, expectedResult, instanceName;
 
@@ -18,38 +23,28 @@ beforeAll(() => {
     expectedResult = undefined;
 });
 
-test('exists_AmiExist_Success', async () => {
-
-    //given
-
-    //when
-    actualResult = await ami.exists(amiName);
-
-    //then
-    expect(actualResult.toBe(true));
-})
-
 test('exists_AmiNotExist_Success', async () => {
 
     //given
+    amiName = "team-backup-ami-jest-1-not-exist";
 
     //when
     actualResult = await ami.exists(amiName);
 
     //then
-    expect(actualResult.toBe(false));
+    expect(actualResult).toBe(false);
 })
 
 test('create_InstanceExist_Success', async () => {
 
     //given
-    instanceName = "team-backup-instance-for-ami";
+    instanceName = "WINDOWS_INSTANCE";
 
     //when
     await ami.create(amiName, instanceName);
 
     //then
-    expect(await ami.exists(amiName).toBe(true));
+    expect(await ami.exists(amiName)).toBe(true);
 })
 
 test('create_InstanceNotExist_ThrowException', async () => {
@@ -58,7 +53,7 @@ test('create_InstanceNotExist_ThrowException', async () => {
     instanceName = "team-backup-instance-not-exist";
 
     // when
-    expect(() => await ami.create(amiName, instanceName)).toThrow('InstanceNotFoundException');
+    expect(async () => await ami.create(amiName, instanceName)).rejects.toThrow(InstanceNotFoundException);
 
     // then
     // Exception thrown
@@ -68,22 +63,21 @@ test('create_InstanceNotExist_ThrowException', async () => {
 test('delete_AmiExist_Success', async () => {
 
     //given
-    expect(await ami.exists(amiName).toBe(true));
+    expect(await ami.exists(amiName)).toBe(true);
 
     // when
     await ami.delete(amiName);
 
     //then
-    expect(await ami.exists(amiName).toBe(false));
+    expect(await ami.exists(amiName)).toBe(false);
 })
 
 test('delete_AmiNotExist_ThrowException', async () => {
 
     //given
-    expect(await ami.exists(amiName).toBe(true));
 
     // when
-    expect(() => await ami.delete(amiName)).toThrow(AmiNotFoundException);
+    expect(async () => await ami.delete(amiName)).rejects.toThrow(AmiNotFoundException);
 
     //then
     //Exception thrown
