@@ -1,2 +1,2 @@
-export default class SnapshotException extends Error {
+module.exports = class SnapshotException extends Error {
 }
