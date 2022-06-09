@@ -3,7 +3,7 @@
  * @brief     This class is used to manage an AMI from an instance.
  * @author    Created by Anthony Bouillant
  * @date      2022-12-05
- * 
+ * @url       https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/index.html
  */
 
 "use strict";
@@ -49,11 +49,21 @@ module.exports = class Ami {
         return response.Images[0];
     }
 
+    /**
+     * This method is used to check if an AMI exists.
+     * @param {*} name 
+     * @returns 
+     */
     async exists(name) {
         const ami = await this.find(name);
         return ami !== undefined;
     }
 
+    /**
+     * This method is used to find an Instance.
+     * @param {*} name 
+     * @returns 
+     */
     async findInstance(name) {
         const input = {
             'Filters': [
@@ -66,11 +76,21 @@ module.exports = class Ami {
         return response.Reservations;
     }
 
+    /**
+     * This method is used to check if an instance exists.
+     * @param {*} name 
+     * @returns 
+     */
     async existsInstance(name) {
         const instances = await this.findInstance(name);
         return instances.length > 0;
     }
 
+    /**
+     * This method is used to get the instance ID from an instance name.
+     * @param {*} name 
+     * @returns 
+     */
     async getInstanceId(name) {
         const instances = await this.findInstance(name);
         return instances[0].Instances[0].InstanceId;
@@ -111,7 +131,7 @@ module.exports = class Ami {
         const command = new CreateImageCommand(input);
         let response;
         try {
-            response = await this.#client.send(command)
+            response = await this.#client.send(command);
         } catch (error) {
             throw new AmiCreationException('Ami creation failed');
         }
