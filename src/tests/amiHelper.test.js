@@ -11,7 +11,6 @@ const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundExc
 const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js").default;
 const AmiAlreadyExistException = require("../ami/exceptions/AmiAlreadyExistException.js").default;
 const AmiCreationException = require("../ami/exceptions/AmiCreationException.js").default;
-const AmiDeletionException = require("../ami/exceptions/AmiDeletionException.js").default;
 
 let ami, amiName, actualResult, expectedResult, instanceName;
 

@@ -12,7 +12,6 @@ const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundExc
 const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js");
 const AmiAlreadyExistException = require("../ami/exceptions/AmiAlreadyExistException.js");
 const AmiCreationException = require("../ami/exceptions/AmiCreationException.js");
-const AmiDeletionException = require("../ami/exceptions/AmiDeletionException.js");
 
 
 module.exports = class Ami {
