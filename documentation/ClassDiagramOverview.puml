@@ -1,0 +1,143 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "Core"{
+
+    'classes and interfaces
+    interface ICloudClient{
+        +Constructor(string : cloudRegion, string : logPath)
+        +ReadParameter(json : filePath, object : objectToMap):object
+        +Log(string : logName, string[] : logRecords):void
+        +Exists(enum : ResourceType, string : resourceName, string : vpcName = ""):boolean
+    }
+
+    class AwsCloudClientImpl
+
+    'relations
+    ICloudClient <|-- AwsCloudClientImpl
+    AwsCloudClientImpl *-- Cost
+    AwsCloudClientImpl *-- Backup
+    AwsCloudClientImpl *-- Deploy
+    AwsCloudClientImpl *-- Deliver
+}
+
+package "Cost"{
+    'classes and interfaces
+    class BudgetHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+
+    class ReportHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+
+    'relations
+}
+
+package "Backup"{
+    'classes and interfaces
+    class AmiHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+        +Find(string : name): object
+        +Exists(string : name):boolean
+        +FindInstance(string : name):object
+        +ExistsInstance(string : name):boolean
+        +GetInstanceId(string : name):object
+        +Create(string : name, string : instanceName):object
+        +Delete(string : name)
+    }
+
+    class SnapshotHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+        +Find(string : name):object
+        +Exists(string : name):boolean
+        +Create(int: volumeID, string : name, string : Description =""):object
+        +Delete(string : name)
+    }
+
+    class AmiException{}
+    class AmiAlreadyExistsException{}
+    class AmiCreationException{}
+    class AmiDeletionException{}
+    class AmiNotFoundException{}
+    class InstanceNotFoundException{}
+
+
+    class SnapshotException{}
+    class SnapshotNotFoundException{}
+    class SnapshotAlreadyExistException{}
+    class SnapshotNotCreatedException{}
+    class SnapshotVolumeNotFoundException{}
+
+    'relations
+
+    AmiException <|-- AmiAlreadyExistsException
+    AmiException <|-- AmiCreationException
+    AmiException <|-- AmiDeletionException
+    AmiException <|-- AmiNotFoundException
+    AmiException <|-- InstanceNotFoundException
+
+    AmiHelper ..> AmiAlreadyExistsException :throw
+    AmiHelper ..> AmiCreationException :throw
+    AmiHelper ..> AmiDeletionException :throw
+    AmiHelper ..> AmiNotFoundException :throw
+    AmiHelper ..> InstanceNotFoundException :throw
+
+
+    SnapshotException <|-- SnapshotNotFoundException
+    SnapshotException <|-- SnapshotAlreadyExistException
+    SnapshotException <|-- SnapshotNotCreatedException
+    SnapshotException <|-- SnapshotVolumeNotFoundException
+
+    SnapshotHelper ..> SnapshotNotCreatedException :throw
+    SnapshotHelper ..> SnapshotVolumeNotFoundException :throw
+    SnapshotHelper ..> SnapshotAlreadyExistException :throw
+    SnapshotHelper ..> SnapshotNotFoundException :throw
+
+
+
+}
+
+
+package "Deploy"{
+    'classes and interfaces
+    class VpcHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+
+    class IgwHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+
+    class SubnetHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+
+    class SecurityGroupHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+
+    class RouteHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+
+    class InstanceHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+
+    'relations
+}
+
+package "Deliver"{
+    'classes and interfaces
+    class DescribeInfra{
+        +Constructor(awsClient : AwsCloudClientImpl)
+
+    }
+
+    class Credentials{
+        +Constructor(awsClient : AwsCloudClientImpl)
+    }
+}
+
+@enduml
