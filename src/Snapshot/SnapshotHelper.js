@@ -1,8 +1,8 @@
 const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand, DescribeSnapshotsCommand, DescribeVolumesCommand } = require("@aws-sdk/client-ec2");
-const SnapshotAlreadyExist = require("./exceptions/SnapshotAlreadyExist");
-const SnapshotNotFound = require("./exceptions/SnapshotNotFound");
-const SnapshotNotCreated = require("./exceptions/SnapshotNotCreated");
-const SnapshotVolumeNotFound = require("./exceptions/SnapshotVolumeNotFound");
+const SnapshotAlreadyExistException = require("./exceptions/SnapshotAlreadyExistException");
+const SnapshotNotFoundException = require("./exceptions/SnapshotNotFoundException");
+const SnapshotNotCreatedException = require("./exceptions/SnapshotNotCreatedException");
+const SnapshotVolumeNotFoundException = require("./exceptions/SnapshotVolumeNotFoundException");
 
 module.exports = class SnapshotHelper {
     #client;
@@ -28,7 +28,7 @@ module.exports = class SnapshotHelper {
     }
     async create(volumeName, name, description = null) {
         if (await this.exists(name)) {
-            throw new SnapshotAlreadyExist('Snapshot already exists');
+            throw new SnapshotAlreadyExistException('Snapshot already exists');
         }
         let volumeId = await this.getVolumeId(volumeName);
 
@@ -51,7 +51,7 @@ module.exports = class SnapshotHelper {
 
 
         if (result.SnapshotId === undefined) {
-            throw new SnapshotNotCreated('Snapshot not created');
+            throw new SnapshotNotCreatedException('Snapshot not created');
         }
 
         return result;
@@ -61,7 +61,7 @@ module.exports = class SnapshotHelper {
         const snapshot = await this.find(name);
 
         if (snapshot === undefined) {
-            throw new SnapshotNotFound('Snapshot not found');
+            throw new SnapshotNotFoundException('Snapshot not found');
         }
 
         const input = {
@@ -71,9 +71,6 @@ module.exports = class SnapshotHelper {
         const command = new DeleteSnapshotCommand(input);
         const result = await this.#client.send(command);
 
-        if (result.SnapshotId !== undefined) {
-            throw new Error('Snapshot not deleted');
-        }
         return result;
     }
     async findVolume(name) {
@@ -91,7 +88,7 @@ module.exports = class SnapshotHelper {
         const volume = await this.findVolume(name);
 
         if (volume === undefined) {
-            throw new SnapshotVolumeNotFound('Volume not found');
+            throw new SnapshotVolumeNotFoundException('Volume not found');
         }
 
         return volume.VolumeId;

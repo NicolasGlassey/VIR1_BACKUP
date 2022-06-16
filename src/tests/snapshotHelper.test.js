@@ -5,10 +5,10 @@
  */
 
 "use strict";
-const SnapshotNotFound = require("../Snapshot/exceptions/SnapshotNotFound");
-const SnapshotAlreadyExist = require("../Snapshot/exceptions/SnapshotAlreadyExist");
-const SnapshotVolumeNotFound = require("../Snapshot/exceptions/SnapshotVolumeNotFound");
-const SnapshotHelper = require("../Snapshot/SnapshotHelper");
+const SnapshotNotFound = require("../snapshot/exceptions/SnapshotNotFoundException");
+const SnapshotAlreadyExist = require("../snapshot/exceptions/SnapshotAlreadyExistException");
+const SnapshotVolumeNotFound = require("../snapshot/exceptions/SnapshotVolumeNotFoundException");
+const SnapshotHelper = require("../snapshot/SnapshotHelper");
 
 let clientRegionName, snapshotHelper;
 let snapshotName, volumeName;
