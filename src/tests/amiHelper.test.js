@@ -82,3 +82,24 @@ test('delete_AmiNotExist_ThrowException', async () => {
     //Exception thrown
 })
 
+test('allFromSpecificInstance_ExistingInstance_Success', async () => {
+
+    //given
+    instanceName = "WINDOWS_INSTANCE";
+
+    //when
+    let list = await ami.allFromSpecificInstance(instanceName);
+
+    //then
+    expect(list.length).toBeGreaterThan(0);
+})
+
+test('allFromSpecificInstance_NonExistingInstance_ThrowException', async () => {
+
+    //given
+    instanceName = "non-existing-instance";
+
+    //when
+    await expect(ami.allFromSpecificInstance(instanceName)).rejects.toThrow(InstanceNotFoundException);
+})
+

@@ -12,12 +12,14 @@ const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundExc
 const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js");
 const AmiAlreadyExistException = require("../ami/exceptions/AmiAlreadyExistException.js");
 const AmiCreationException = require("../ami/exceptions/AmiCreationException.js");
+const { Logger, AwsCloudClientImpl } = require("vir1-core");
 
 
 module.exports = class Ami {
 
     // #region Private members
     #client;
+    #AwsCloudClientImpl;
     // #endregion
 
     // #region Public members
@@ -27,6 +29,7 @@ module.exports = class Ami {
      */
     constructor(regionName) {
         this.#client = new EC2Client({ region: regionName });
+        this.#AwsCloudClientImpl = new AwsCloudClientImpl(regionName);
     }
 
     /**
@@ -122,7 +125,11 @@ module.exports = class Ami {
                 'Tags': [{
                     'Key': 'Name',
                     'Value': name
-                }]
+                }, {
+                    'Key': 'Source',
+                    'Value': instanceId
+                }
+                ]
             }]
         };
 
@@ -156,6 +163,36 @@ module.exports = class Ami {
         const command = new DeregisterImageCommand(input);
         await this.#client.send(command);
     }
+
+    /**
+     * @brief This method is used to get a list of AMIs from an instance.
+     * @param {string} instanceName : the name of the instance.
+     * @returns {array}
+     * @throws {AmiNotFoundException} : if the AMI does not exist.
+     **/
+    async allFromSpecificInstance(instanceName) {
+
+        if (!await this.#AwsCloudClientImpl.exists(AwsCloudClientImpl.INSTANCE, instanceName)) {
+            this.#AwsCloudClientImpl.log(`Instance ${instanceName} does not exist`);
+            throw new InstanceNotFoundException('Instance not found');
+        }
+
+        let instanceId = await this.getInstanceId(instanceName);
+
+        const input = {
+            'Filters': [
+                { 'Name': 'tag:Source', 'Values': [instanceId] }
+            ]
+        };
+
+        // Find the image
+        const commandDescribeImages = new DescribeImagesCommand(input);
+        const response = await this.#client.send(commandDescribeImages);
+
+        this.#AwsCloudClientImpl.log(`Found ${response.Images.length} AMIs`);
+        return response.Images;
+    }
+
     // #endregion
 
     // #region Private methods
