@@ -135,12 +135,8 @@ module.exports = class Ami {
 
         // Create the image
         const command = new CreateImageCommand(input);
-        let response;
-        try {
-            response = await this.#client.send(command);
-        } catch (error) {
-            throw new AmiCreationException('Ami creation failed');
-        }
+
+        const response = await this.#client.send(command);
 
         return response;
     }
@@ -173,7 +169,7 @@ module.exports = class Ami {
     async allFromSpecificInstance(instanceName) {
 
         if (!await this.#AwsCloudClientImpl.exists(AwsCloudClientImpl.INSTANCE, instanceName)) {
-            this.#AwsCloudClientImpl.log(`Instance ${instanceName} does not exist`);
+            this.#AwsCloudClientImpl.log(`Instance ${instanceName} does not exist`, Logger.ERROR);
             throw new InstanceNotFoundException('Instance not found');
         }
 
@@ -191,6 +187,13 @@ module.exports = class Ami {
 
         this.#AwsCloudClientImpl.log(`Found ${response.Images.length} AMIs`);
         return response.Images;
+    }
+
+    async deleteAllFromSpecificInstance(instanceName) {
+        const amis = await this.allFromSpecificInstance(instanceName);
+        for (let ami of amis) {
+            await this.delete(ami.Name);
+        }
     }
 
     // #endregion

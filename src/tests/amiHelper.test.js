@@ -9,8 +9,6 @@
 const Ami = require("../ami/AmiHelper");
 const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundException.js").default;
 const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js").default;
-const AmiAlreadyExistException = require("../ami/exceptions/AmiAlreadyExistException.js").default;
-const AmiCreationException = require("../ami/exceptions/AmiCreationException.js").default;
 
 let ami, amiName, actualResult, expectedResult, instanceName;
 
@@ -87,12 +85,21 @@ test('allFromSpecificInstance_ExistingInstance_Success', async () => {
     //given
     instanceName = "WINDOWS_INSTANCE";
 
+    let listAmiName = [
+        "team-backup-ami-jest-1",
+        "team-backup-ami-jest-2",
+        "team-backup-ami-jest-3"
+    ];
+
+    // Create AMIs for the test
+    await Promise.all(listAmiName.map(async (amiName) => { if (!await ami.exists(amiName)) await ami.create(amiName, instanceName); }));
+
     //when
     let list = await ami.allFromSpecificInstance(instanceName);
 
     //then
-    expect(list.length).toBeGreaterThan(0);
-})
+    expect(list.length).toBe(3);
+});
 
 test('allFromSpecificInstance_NonExistingInstance_ThrowException', async () => {
 
@@ -101,5 +108,28 @@ test('allFromSpecificInstance_NonExistingInstance_ThrowException', async () => {
 
     //when
     await expect(ami.allFromSpecificInstance(instanceName)).rejects.toThrow(InstanceNotFoundException);
+})
+
+test('deleteAllFromSpecificInstance_ExistingInstance_Success', async () => {
+
+    //given
+    instanceName = "WINDOWS_INSTANCE";
+    expectedResult = [];
+
+    //when
+    await ami.deleteAllFromSpecificInstance(instanceName);
+
+    //then
+    expect(await ami.allFromSpecificInstance(instanceName)).toEqual(expectedResult);
+})
+
+test('deleteAllFromSpecificInstance_NonExistingInstance_Success', async () => {
+
+    //given
+    instanceName = "non-existing-instance";
+    expectedResult = [];
+
+    //when
+    await expect(ami.deleteAllFromSpecificInstance(instanceName)).rejects.toThrow(InstanceNotFoundException);
 })
 
