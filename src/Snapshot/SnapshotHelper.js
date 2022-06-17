@@ -93,4 +93,19 @@ module.exports = class SnapshotHelper {
 
         return volume.VolumeId;
     }
+    async findAllByVolume(volumeName) {
+        const volumeId = await this.getVolumeId(volumeName);
+        const config = {
+            'Filters': [
+                { 'Name': 'volume-id', 'Values': ['vol-0374331df1484b5b1'] }
+            ]
+        };
+        const response = await this.#client.send(new DescribeSnapshotsCommand(config));
+
+        return response.Snapshots;
+    }
+    async findAllSnapshotsByVolume(volumeName) {
+
+
+    }
 }

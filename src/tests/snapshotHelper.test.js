@@ -12,6 +12,8 @@ const SnapshotHelper = require("../snapshot/SnapshotHelper");
 
 let clientRegionName, snapshotHelper;
 let snapshotName, volumeName;
+jest.setTimeout('10000');
+
 
 beforeAll(async () => {
     clientRegionName = "eu-west-3";
@@ -104,3 +106,13 @@ test('SnapshotDelete_SnapshotNotExist_ThrowError', async () => {
     //then
     //Exception thrown
 })
+//test find all snapshot of a volume
+test('findAll_SnapshotExist_Success', async () => {
+    //given
+    volumeName = 'jspasjd';
+    //when
+    const result = await snapshotHelper.findAllByVolume(volumeName);
+    //then
+    expect(result.length).toBe(3);
+}
+)
