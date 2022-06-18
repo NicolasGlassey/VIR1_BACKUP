@@ -8,8 +8,8 @@
 
 "use strict";
 const { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand, DescribeInstancesCommand } = require("@aws-sdk/client-ec2");
-const InstanceNotFoundException = require("./ami/exceptions/InstanceNotFoundException.js");
-const AmiNotFoundException = require("./ami/exceptions/AmiNotFoundException.js");
+const InstanceNotFoundException = require("../exceptions/ami/InstanceNotFoundException.js");
+const AmiNotFoundException = require("../exceptions/ami/AmiNotFoundException.js");
 const AmiAlreadyExistException = require("../exceptions/ami/AmiAlreadyExistException.js");
 const AmiNumberException = require("../exceptions/ami/AmiNumberException.js");
 const { Logger, AwsCloudClientImpl } = require("vir1-core");
@@ -169,7 +169,7 @@ module.exports = class Ami {
     async allFromSpecificInstance(instanceName) {
 
         if (!await this.#AwsCloudClientImpl.exists(AwsCloudClientImpl.INSTANCE, instanceName)) {
-            this.#AwsCloudClientImpl.log(`Instance ${instanceName} does not exist`, Logger.ERROR);
+            await this.#AwsCloudClientImpl.log(`Instance ${instanceName} does not exist`, Logger.ERROR);
             throw new InstanceNotFoundException('Instance not found');
         }
 
@@ -185,7 +185,7 @@ module.exports = class Ami {
         const commandDescribeImages = new DescribeImagesCommand(input);
         const response = await this.#client.send(commandDescribeImages);
 
-        this.#AwsCloudClientImpl.log(`Found ${response.Images.length} AMIs`);
+        await this.#AwsCloudClientImpl.log(`Found ${response.Images.length} AMIs`);
         return response.Images;
     }
 

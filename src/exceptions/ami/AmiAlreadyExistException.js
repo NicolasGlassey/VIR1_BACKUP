@@ -1,3 +1,3 @@
-const AmiException = require('../../ami/exceptions/AmiException');
+const AmiException = require('./AmiException');
 module.exports = class AmiAlreadyExistException extends AmiException {
 }

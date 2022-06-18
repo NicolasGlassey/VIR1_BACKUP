@@ -8,8 +8,8 @@
 "use strict";
 const Ami = require("../helpers/AmiHelper");
 const AmiNumberException = require("../exceptions/ami/AmiNumberException");
-const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundException.js").default;
-const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js").default;
+const InstanceNotFoundException = require("../exceptions/ami/InstanceNotFoundException.js").default;
+const AmiNotFoundException = require("../exceptions/ami/AmiNotFoundException.js").default;
 
 let ami, amiName, actualResult, expectedResult, instanceName;
 
@@ -100,7 +100,7 @@ test('allFromSpecificInstance_ExistingInstance_Success', async () => {
 
     //then
     expect(list.length).toBe(3);
-});
+}, 10000);
 
 test('allFromSpecificInstance_NonExistingInstance_ThrowException', async () => {
 
@@ -189,4 +189,9 @@ test('hasMoreAmiThan_MoreThanNumberOfAmi_Success', async () => {
 
     //then
     expect(list).toBe(false);
+})
+
+afterAll(async () => {
+    instanceName = "WINDOWS_INSTANCE";
+    await ami.deleteAllFromSpecificInstance(instanceName);
 })
