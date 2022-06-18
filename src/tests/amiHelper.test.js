@@ -7,6 +7,7 @@
 
 "use strict";
 const Ami = require("../ami/AmiHelper");
+const AmiNumberException = require("../exceptions/ami/AmiNumberException");
 const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundException.js").default;
 const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js").default;
 
@@ -133,3 +134,59 @@ test('deleteAllFromSpecificInstance_NonExistingInstance_Success', async () => {
     await expect(ami.deleteAllFromSpecificInstance(instanceName)).rejects.toThrow(InstanceNotFoundException);
 })
 
+test('hasMoreAmiThan_NonExistingInstance_ThrowException', async () => {
+    //given
+    instanceName = "non-existing-instance";
+    const numberOfAmi = 3;
+
+    //when
+    await expect(ami.hasMoreAmiThan(numberOfAmi, instanceName)).rejects.toThrow(InstanceNotFoundException);
+})
+
+test('hasMoreAmiThan_IncorrectNumber_ThrowException', async () => {
+    //given
+    instanceName = "WINDOWS_INSTANCE";
+    const incorrectNumber = 'INCORRECT_NUMBER';
+
+    //when
+    await expect(ami.hasMoreAmiThan(incorrectNumber, instanceName)).rejects.toThrow(AmiNumberException);
+})
+
+test('hasMoreAmiThan_LessThanNumberOfAmi_Success', async () => {
+    //given
+    instanceName = "WINDOWS_INSTANCE";
+    let numberOfAmi = 2;
+    let listAmiName = [
+        "team-backup-ami-jest-1",
+        "team-backup-ami-jest-2",
+        "team-backup-ami-jest-3"
+    ];
+
+    // Create AMIs for the test
+    await Promise.all(listAmiName.map(async (amiName) => { if (!await ami.exists(amiName)) await ami.create(amiName, instanceName); }));
+
+    //when
+    let list = await ami.hasMoreAmiThan(numberOfAmi, instanceName);
+
+    //then
+    expect(list).toBe(true);
+})
+
+test('hasMoreAmiThan_MoreThanNumberOfAmi_Success', async () => {
+    instanceName = "WINDOWS_INSTANCE";
+    let numberOfAmi = 10;
+    let listAmiName = [
+        "team-backup-ami-jest-1",
+        "team-backup-ami-jest-2",
+        "team-backup-ami-jest-3"
+    ];
+
+    // Create AMIs for the test
+    await Promise.all(listAmiName.map(async (amiName) => { if (!await ami.exists(amiName)) await ami.create(amiName, instanceName); }));
+
+    //when
+    let list = await ami.hasMoreAmiThan(numberOfAmi, instanceName);
+
+    //then
+    expect(list).toBe(false);
+})

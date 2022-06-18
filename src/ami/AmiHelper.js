@@ -13,6 +13,7 @@ const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js"
 const AmiAlreadyExistException = require("../ami/exceptions/AmiAlreadyExistException.js");
 const AmiCreationException = require("../ami/exceptions/AmiCreationException.js");
 const { Logger, AwsCloudClientImpl } = require("vir1-core");
+const AmiNumberException = require("../exceptions/ami/AmiNumberException.js");
 
 
 module.exports = class Ami {
@@ -194,6 +195,15 @@ module.exports = class Ami {
         for (let ami of amis) {
             await this.delete(ami.Name);
         }
+    }
+
+    async hasMoreAmiThan(number, instanceName) {
+
+        if (isNaN(number)) throw new AmiNumberException(`${number} is not a number`);
+
+        const amis = await this.allFromSpecificInstance(instanceName);
+
+        return amis.length >= number;
     }
 
     // #endregion
