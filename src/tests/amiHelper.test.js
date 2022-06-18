@@ -6,7 +6,7 @@
  */
 
 "use strict";
-const Ami = require("../ami/AmiHelper");
+const Ami = require("../helpers/AmiHelper");
 const AmiNumberException = require("../exceptions/ami/AmiNumberException");
 const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundException.js").default;
 const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js").default;

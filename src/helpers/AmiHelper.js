@@ -8,12 +8,11 @@
 
 "use strict";
 const { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand, DescribeInstancesCommand } = require("@aws-sdk/client-ec2");
-const InstanceNotFoundException = require("../ami/exceptions/InstanceNotFoundException.js");
-const AmiNotFoundException = require("../ami/exceptions/AmiNotFoundException.js");
-const AmiAlreadyExistException = require("../ami/exceptions/AmiAlreadyExistException.js");
-const AmiCreationException = require("../ami/exceptions/AmiCreationException.js");
-const { Logger, AwsCloudClientImpl } = require("vir1-core");
+const InstanceNotFoundException = require("./ami/exceptions/InstanceNotFoundException.js");
+const AmiNotFoundException = require("./ami/exceptions/AmiNotFoundException.js");
+const AmiAlreadyExistException = require("../exceptions/ami/AmiAlreadyExistException.js");
 const AmiNumberException = require("../exceptions/ami/AmiNumberException.js");
+const { Logger, AwsCloudClientImpl } = require("vir1-core");
 
 
 module.exports = class Ami {
