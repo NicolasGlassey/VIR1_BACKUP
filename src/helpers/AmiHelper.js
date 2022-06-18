@@ -8,18 +8,20 @@
 
 "use strict";
 const { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand, DescribeInstancesCommand } = require("@aws-sdk/client-ec2");
-const InstanceNotFoundException = require("../exceptions/ami/InstanceNotFoundException.js");
+const InstanceNotFoundException = require("../exceptions/instance/InstanceNotFoundException.js");
 const AmiNotFoundException = require("../exceptions/ami/AmiNotFoundException.js");
 const AmiAlreadyExistException = require("../exceptions/ami/AmiAlreadyExistException.js");
-const AmiNumberException = require("../exceptions/ami/AmiNumberException.js");
+const InvalidNumberException = require("../exceptions/InvalidNumberException.js");
+const InstanceHelper = require("./InstanceHelper.js");
 const { Logger, AwsCloudClientImpl } = require("vir1-core");
 
 
-module.exports = class Ami {
+module.exports = class AmiHelper {
 
     // #region Private members
     #client;
-    #AwsCloudClientImpl;
+    #awsCloudClientImpl;
+    #instance;
     // #endregion
 
     // #region Public members
@@ -28,8 +30,9 @@ module.exports = class Ami {
      * @param {EC2Client} client : the client used to communicate with the AWS API. 
      */
     constructor(regionName) {
+        this.#awsCloudClientImpl = new AwsCloudClientImpl(regionName);
         this.#client = new EC2Client({ region: regionName });
-        this.#AwsCloudClientImpl = new AwsCloudClientImpl(regionName);
+        this.#instance = new InstanceHelper(regionName);
     }
 
     /**
@@ -37,7 +40,7 @@ module.exports = class Ami {
      * @param {string} name : the name of the AMI to find. 
      * @returns {object} ami : the AMI found.
      */
-    async find(name) {
+    async #find(name) {
         const config = {
             'Filters': [
                 { 'Name': 'name', 'Values': [name] }
@@ -52,53 +55,6 @@ module.exports = class Ami {
     }
 
     /**
-     * This method is used to check if an AMI exists.
-     * @param {*} name 
-     * @returns 
-     */
-    async exists(name) {
-        const ami = await this.find(name);
-        return ami !== undefined;
-    }
-
-    /**
-     * This method is used to find an Instance.
-     * @param {*} name 
-     * @returns 
-     */
-    async findInstance(name) {
-        const input = {
-            'Filters': [
-                { 'Name': 'tag:Name', 'Values': [name] }
-            ]
-        }
-        const command = new DescribeInstancesCommand(input);
-        const response = await this.#client.send(command);
-
-        return response.Reservations;
-    }
-
-    /**
-     * This method is used to check if an instance exists.
-     * @param {*} name 
-     * @returns 
-     */
-    async existsInstance(name) {
-        const instances = await this.findInstance(name);
-        return instances.length > 0;
-    }
-
-    /**
-     * This method is used to get the instance ID from an instance name.
-     * @param {*} name 
-     * @returns 
-     */
-    async getInstanceId(name) {
-        const instances = await this.findInstance(name);
-        return instances[0].Instances[0].InstanceId;
-    }
-
-    /**
      * @brief This method is used to create an AMI from an instance.
      * @param {string} name : the name of the AMI to create. 
      * @param  {string} instanceName : the instance ID from which the AMI will be created.
@@ -106,16 +62,23 @@ module.exports = class Ami {
      */
     async create(name, instanceName) {
 
-        if (!await this.existsInstance(instanceName)) {
-            throw new InstanceNotFoundException('Instance not found');
+        if (!await this.#awsCloudClientImpl.exists(AwsCloudClientImpl.INSTANCE, instanceName)) {
+            await this.#awsCloudClientImpl.log(`AmiHelper.create: Instance ${instanceName} does not exist`, Logger.ERROR);
+            throw new InstanceNotFoundException(`Instance ${instanceName} not found`);
         }
 
-        if (await this.exists(name)) {
-            throw new AmiAlreadyExistException('Ami already exists');
+        if (await this.#awsCloudClientImpl.exists(AwsCloudClientImpl.IMAGE, name)) {
+            await this.#awsCloudClientImpl.log(`AmiHelper.create: Image ${name} already exists`, Logger.ERROR);
+            throw new AmiAlreadyExistException(`Image ${name} already exists`);
         }
 
-        let instanceId = await this.getInstanceId(instanceName);
+        let instanceId = await this.#instance.instanceId(instanceName).catch(err => {
+            throw err;
+        })
 
+        // Create the image from the instance with 2 tags : 
+        // - Name : the name of the AMI
+        // - Source : the ID of the instance from which the AMI is created, so that we can find from witch instance the AMI is created.
         const input = {
             'InstanceId': instanceId,
             'Name': name,
@@ -133,12 +96,12 @@ module.exports = class Ami {
             }]
         };
 
+        await this.#awsCloudClientImpl.log(`AmiHelper.create: Creating AMI ${name} from instance ${instanceId}`, Logger.INFO);
+
         // Create the image
         const command = new CreateImageCommand(input);
 
-        const response = await this.#client.send(command);
-
-        return response;
+        return await this.#client.send(command);
     }
 
     /**
@@ -147,13 +110,19 @@ module.exports = class Ami {
      * @returns response : the response of the request.
      */
     async delete(name) {
-        const ami = await this.find(name);
 
-        if (ami === undefined) throw new AmiNotFoundException('Ami does not exist');
+        if (!await this.#awsCloudClientImpl.exists(AwsCloudClientImpl.IMAGE, name)) {
+            await this.#awsCloudClientImpl.log(`AmiHelper.delete: Image ${name} already exists`, Logger.ERROR);
+            throw new AmiNotFoundException(`Image ${name} not found`);
+        }
+
+        const imageId = (await this.#find(name)).ImageId;
 
         const input = {
-            'ImageId': ami.ImageId,
+            'ImageId': imageId,
         };
+
+        await this.#awsCloudClientImpl.log(`AmiHelper.delete: Deleting AMI ${name}`, Logger.INFO);
 
         // Delete the image
         const command = new DeregisterImageCommand(input);
@@ -166,14 +135,16 @@ module.exports = class Ami {
      * @returns {array}
      * @throws {AmiNotFoundException} : if the AMI does not exist.
      **/
-    async allFromSpecificInstance(instanceName) {
+    async describeFromInstance(instanceName) {
 
-        if (!await this.#AwsCloudClientImpl.exists(AwsCloudClientImpl.INSTANCE, instanceName)) {
-            await this.#AwsCloudClientImpl.log(`Instance ${instanceName} does not exist`, Logger.ERROR);
-            throw new InstanceNotFoundException('Instance not found');
+        if (!await this.#awsCloudClientImpl.exists(AwsCloudClientImpl.INSTANCE, instanceName)) {
+            await this.#awsCloudClientImpl.log(`AmiHelper.describeFromInstance: Instance ${instanceName} does not exist`, Logger.ERROR);
+            throw new InstanceNotFoundException(`Instance ${instanceName} does not exist`);
         }
 
-        let instanceId = await this.getInstanceId(instanceName);
+        let instanceId = await this.#instance.instanceId(instanceName).catch(err => {
+            throw err;
+        });
 
         const input = {
             'Filters': [
@@ -185,22 +156,41 @@ module.exports = class Ami {
         const commandDescribeImages = new DescribeImagesCommand(input);
         const response = await this.#client.send(commandDescribeImages);
 
-        await this.#AwsCloudClientImpl.log(`Found ${response.Images.length} AMIs`);
+        await this.#awsCloudClientImpl.log(`AmiHelper.describeFromInstance: Found ${response.Images.length} AMIs from instance ${instanceName}`, Logger.INFO);
+
         return response.Images;
     }
 
-    async deleteAllFromSpecificInstance(instanceName) {
-        const amis = await this.allFromSpecificInstance(instanceName);
+    /**
+     * @brief This method is used to delete all AMIs from an instance.
+     * @param {*} instanceName 
+     */
+    async deleteFromInstance(instanceName) {
+        const amis = await this.describeFromInstance(instanceName);
         for (let ami of amis) {
             await this.delete(ami.Name);
         }
     }
 
-    async hasMoreAmiThan(number, instanceName) {
+    /**
+     * @brief This method is used to detect if an instance has more than X AMIs.
+     * @param {*} instanceName
+     * @param {*} number  
+     * @returns {boolean} true if the instance has more or equal than X AMIs, false otherwise.
+     */
+    async hasMoreThanXAmiFromInstance(instanceName, number) {
 
-        if (isNaN(number)) throw new AmiNumberException(`${number} is not a number`);
+        if (!await this.#awsCloudClientImpl.exists(AwsCloudClientImpl.INSTANCE, instanceName)) {
+            await this.#awsCloudClientImpl.log(`AmiHelper.hasMoreThanXAmiFromInstance: Instance ${instanceName} does not exist`, Logger.ERROR);
+            throw new InstanceNotFoundException(`Instance ${instanceName} does not exist`);
+        }
 
-        const amis = await this.allFromSpecificInstance(instanceName);
+        if (isNaN(number)) {
+            await this.#awsCloudClientImpl.log(`AmiHelper.hasMoreThanXAmiFromInstance: Number ${number} is not a number`, Logger.ERROR);
+            throw new InvalidNumberException(`Number ${number} is not a number`);
+        }
+
+        const amis = await this.describeFromInstance(instanceName);
 
         return amis.length >= number;
     }
