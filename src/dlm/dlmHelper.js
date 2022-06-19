@@ -26,19 +26,21 @@ module.exports = class Dml {
 
     /**
      * This method is used to check if an Policy exists.
-     * @param {*} policyId 
+     * @param {*} dmlId 
      * @returns 
      */
-    async exists(policyId) {
-
-        const command = new GetLifecyclePoliciesCommand();
+    async exists(dmlId) {
+        const input = {
+            'PolicyIds': [dmlId]
+        };
+        const command = new GetLifecyclePoliciesCommand(input);
         let response;
         try {
             response = await this.#client.send(command);
         } catch (error) {
             throw new DlmNotFoundException('Dlm not found');
         }
-      
+      return response.Policies.length > 0;
     }
 
     async find(name) {
@@ -89,6 +91,7 @@ module.exports = class Dml {
                 }
             ]
         };
+        console.log(input);
      
            
          // Create the Policy
@@ -107,30 +110,20 @@ module.exports = class Dml {
      * @param {string} policyId : the id of the DML to delete.
      * @returns response : the response of the request.
      */
-       async delete(policyId) {
+       async delete(dmlId) {
+        const input = {
+            'PolicyIds': [dmlId]
+        };
 
-         const command = new DeleteLifecyclePolicyCommand(policyId);
+         const command = new DeleteLifecyclePolicyCommand(input);
          let response;
          try {
              response = await this.#client.send(command);
          } catch (error) {
              throw new DlmDeleteException('Dlm delete failed');
          }
-
         return response;
     }
-
-    
-    /**
-     * This method is used to get the instance ID from an instance name.
-     * @param {*} name 
-     * @returns 
-     */
-     async getPolicyId(policyId) {
-        const instances = await this.findInstance(name);
-        return instances[0].Instances[0].InstanceId;
-    }
-
 
    // #region Private methods
    // #endregion

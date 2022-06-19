@@ -115,6 +115,7 @@ package "Backup"{
     DmlHelper ..> DlmAlreadyExistException :throw
     DmlHelper ..> DlmCreatedException :throw
     DmlHelper ..> DlmDeleteException :throw
+    DmlHelper ..>DlmNotFoundException
 
 
 
