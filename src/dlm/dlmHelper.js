@@ -3,6 +3,7 @@
 const { DLMClient, CreateLifecyclePolicyCommand } = require("@aws-sdk/client-dlm");
 const DlmCreationException = require("./exceptions/DlmCreationException");
 const DlmAlreadyExistException = require("./exceptions/DlmAlreadyExistException");
+const DlmDeleteException = require("./exceptions/DlmDeleteException");
 
 module.exports = class DLMClientHelper {
 
@@ -32,9 +33,9 @@ module.exports = class DLMClientHelper {
 
 
     /**
-     * @brief This method is used to create an AMI from an instance.
+     * @brief This method is used to create an DLM from an instance.
      * @param {string} name : the name of the DLM to create. 
-     * @param  {string} instanceName : the instance ID from which the AMI will be created.
+     * @param  {string} role : the role of the DLM to create.
      * @returns response : the response of the request.
      */
      async create(name, role) {
@@ -72,8 +73,6 @@ module.exports = class DLMClientHelper {
             ]
         };
            
-
-
          // Create the Policy
          const command = new CreateLifecyclePolicyCommand(input);
          let response;
@@ -86,7 +85,23 @@ module.exports = class DLMClientHelper {
         return response;
     }
 
+      /**
+     * @brief This method is used to delete an DML.
+     * @param {string} policyId : the id of the DML to delete.
+     * @returns response : the response of the request.
+     */
+       async delete(policyId) {
 
+         const command = new DeleteLifecyclePolicyCommand(policyId);
+         let response;
+         try {
+             response = await this.#client.send(command);
+         } catch (error) {
+             throw new DlmDeleteException('Dlm delete failed');
+         }
+
+        return response;
+    }
 
     // #region Private methods
     // #endregion
