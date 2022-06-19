@@ -9,15 +9,22 @@ Example of features to develop:
 * Perform a backup rotation (beyond a certain duration, delete the backup).
 * Delete a whole vpc.
 
+## Built With
+
+* [NodeJS](https://nodejs.org)
+* [AWS NodeJS SDK](https://aws.amazon.com/fr/sdk-for-javascript)
+* [Jest](https://jestjs.io)
+* [VIR1-CORE](https://github.com/Thynkon/VIR1-CORE)
 
 ## Installation
 
-Prerequisite:
+### Prerequisite
 
-* npm 8.3.0 or later
-* node 16.10.0 or later
+* [npm 8.3.0 or later](https://www.npmjs.com/)
+* [node 16.10.0 or later](https://nodejs.org/en/)
 
-Install VIR1_BACKUP
+
+### Install VIR1_BACKUP
 
 ```bash
   git clone https://github.com/antbou/VIR1_BACKUP.git
