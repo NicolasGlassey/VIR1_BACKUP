@@ -2,7 +2,7 @@
 
 const AmiHelper = require("../helpers/AmiHelper");
 const { AwsCloudClientImpl } = require("vir1-core");
-const InvalidNumberException = require("../exceptions/InvalidNumberException.js").default;
+const AmiInvalidNumberException = require("../exceptions/ami/AmiInvalidNumberException.js").default;
 const InstanceNotFoundException = require("../exceptions/instance/InstanceNotFoundException.js").default;
 const AmiNotFoundException = require("../exceptions/ami/AmiNotFoundException.js").default;
 
@@ -132,7 +132,7 @@ describe('IMAGE_ROTATION', () => {
         const incorrectNumber = 'INCORRECT_NUMBER';
 
         //when
-        await expect(ami.hasMoreThanXAmiFromInstance(instanceName, incorrectNumber)).rejects.toThrow(InvalidNumberException);
+        await expect(ami.hasMoreThanXAmiFromInstance(instanceName, incorrectNumber)).rejects.toThrow(AmiInvalidNumberException);
     })
 
     test('hasMoreThanXAmiFromInstance_LessThanNumberOfAmi_Success', async () => {
