@@ -32,6 +32,12 @@ package "Backup"{
         +instanceId(string : name):string
 
     }
+     class DmlHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+        +Exists(int : id):boolean
+        +Find(string : name):object
+        +Create(string : name, string : role, string :type,string : instanceName):object
+        +Delete(int : id)
 
     class AmiException{}
     class AmiAlreadyExistsException{}
@@ -70,5 +76,15 @@ package "Backup"{
     SnapshotHelper ..> SnapshotVolumeNotFoundException :throw
     SnapshotHelper ..> SnapshotAlreadyExistException :throw
     SnapshotHelper ..> SnapshotNotFoundException :throw
+
+    DlmException <|-- DlmNotFoundException
+    DlmException <|-- DlmAlreadyExistException
+    DlmException <|-- DlmCreatedException
+    DlmException <|-- DlmDeleteException
+
+    DmlHelper ..> DlmAlreadyExistException :throw
+    DmlHelper ..> DlmCreatedException :throw
+    DmlHelper ..> DlmDeleteException :throw
+    DmlHelper ..>DlmNotFoundException
 
 @enduml
