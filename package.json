@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/antbou/VIR1_BACKUP#readme",
   "dependencies": {
+    "@aws-sdk/client-dlm": "^3.112.0",
     "@aws-sdk/client-ec2": "^3.89.0",
     "aws-sdk": "^2.1132.0"
   },
