@@ -4,7 +4,7 @@
 package "Backup"{
     'classes and interfaces
     class AmiHelper{
-        +Constructor(awsClient : AwsCloudClientImpl)
+        +Constructor(string : regionName)
         -Find(string : name): object
         +Create(string : name, string : instanceName):object
         +Delete(string : name)
@@ -24,7 +24,7 @@ package "Backup"{
     }
 
     class InstanceHelper{
-        +Constructor(awsClient : AwsCloudClientImpl)
+        +Constructor(string : regionName)
         -Find(string : name): object
         +instanceId(string : name): int
 
@@ -33,6 +33,7 @@ package "Backup"{
     class AmiException{}
     class AmiAlreadyExistsException{}
     class AmiNotFoundException{}
+    class AmiInvalidNumberException{}
 
     class SnapshotException{}
     class SnapshotNotFoundException{}
@@ -43,19 +44,19 @@ package "Backup"{
     class InstanceException
     class InstanceNotFoundException
 
-    class InvalidNumberException
-
     'relations
 
     AmiException <|-- AmiAlreadyExistsException
     AmiException <|-- AmiNotFoundException
-    InstanceException <|-- InstanceNotFoundException
+    AmiException <|-- AmiInvalidNumberException
 
     AmiHelper ..> AmiAlreadyExistsException :throw
     AmiHelper ..> AmiNotFoundException :throw
-    AmiHelper ..> InstanceNotFoundException :throw
-    AmiHelper ..> InvalidNumberException :throw
+    AmiHelper ..> AmiInvalidNumberException :throw
 
+    AmiHelper ..> InstanceHelper :use
+    InstanceException <|-- InstanceNotFoundException
+    InstanceHelper ..> InstanceNotFoundException :throw
 
     SnapshotException <|-- SnapshotNotFoundException
     SnapshotException <|-- SnapshotAlreadyExistException
