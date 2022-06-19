@@ -128,8 +128,3 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-.idea/workspace.xml
-.idea/vcs.xml
-
-# Webstrom exclusion
-.idea/
