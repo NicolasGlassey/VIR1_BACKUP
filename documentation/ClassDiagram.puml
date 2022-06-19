@@ -1,0 +1,70 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "Backup"{
+    'classes and interfaces
+    class AmiHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+        -Find(string : name): object
+        +Create(string : name, string : instanceName):object
+        +Delete(string : name)
+        +DescribeFromInstance(string: instanceName):array
+        +DeleteFromInstance(string: instanceName)
+        +hasMoreThanXAmiFromInstance(string : instanceName,int : number):bool
+    }
+
+    class SnapshotHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+        -Find(string : name):object
+        +Create(int: volumeID, string : name, string : Description =""):object
+        +Delete(string : name)
+        +FindVolume(string : name):object
+        +GetVolumeId(string : name): int
+        +FindAllByVolume(string : volumeName): array
+    }
+
+    class InstanceHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+        -Find(string : name): object
+        +instanceId(string : name): int
+
+    }
+
+    class AmiException{}
+    class AmiAlreadyExistsException{}
+    class AmiNotFoundException{}
+
+    class SnapshotException{}
+    class SnapshotNotFoundException{}
+    class SnapshotAlreadyExistException{}
+    class SnapshotNotCreatedException{}
+    class SnapshotVolumeNotFoundException{}
+
+    class InstanceException
+    class InstanceNotFoundException
+
+    class InvalidNumberException
+
+    'relations
+
+    AmiException <|-- AmiAlreadyExistsException
+    AmiException <|-- AmiNotFoundException
+    InstanceException <|-- InstanceNotFoundException
+
+    AmiHelper ..> AmiAlreadyExistsException :throw
+    AmiHelper ..> AmiNotFoundException :throw
+    AmiHelper ..> InstanceNotFoundException :throw
+    AmiHelper ..> InvalidNumberException :throw
+
+
+    SnapshotException <|-- SnapshotNotFoundException
+    SnapshotException <|-- SnapshotAlreadyExistException
+    SnapshotException <|-- SnapshotNotCreatedException
+    SnapshotException <|-- SnapshotVolumeNotFoundException
+
+    SnapshotHelper ..> SnapshotNotCreatedException :throw
+    SnapshotHelper ..> SnapshotVolumeNotFoundException :throw
+    SnapshotHelper ..> SnapshotAlreadyExistException :throw
+    SnapshotHelper ..> SnapshotNotFoundException :throw
+
+@enduml
