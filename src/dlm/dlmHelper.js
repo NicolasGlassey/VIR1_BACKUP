@@ -1,11 +1,14 @@
+//for more information,
+//https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-dlm/index.html
 
 "use strict";
-const { DLMClient, CreateLifecyclePolicyCommand } = require("@aws-sdk/client-dlm");
+const { DLMClient, CreateLifecyclePolicyCommand, DeleteLifecyclePolicyCommand, GetLifecyclePoliciesCommand } = require("@aws-sdk/client-dlm");
 const DlmCreationException = require("./exceptions/DlmCreationException");
 const DlmAlreadyExistException = require("./exceptions/DlmAlreadyExistException");
 const DlmDeleteException = require("./exceptions/DlmDeleteException");
+const DlmNotFoundException = require("./exceptions/DlmNotFoundException");
 
-module.exports = class DLMClientHelper {
+module.exports = class Dml {
 
     // #region Private members
     #client;
@@ -23,14 +26,20 @@ module.exports = class DLMClientHelper {
 
     /**
      * This method is used to check if an Policy exists.
-     * @param {*} name 
+     * @param {*} policyId 
      * @returns 
      */
-    async exists(name) {
-        const policy = await this.find(name);
-        return ami !== undefined;
-    }
+    async exists(policyId) {
 
+        const command = new GetLifecyclePoliciesCommand();
+        let response;
+        try {
+            response = await this.#client.send(command);
+        } catch (error) {
+            throw new DlmNotFoundException('Dlm not found');
+        }
+      
+    }
 
     /**
      * @brief This method is used to create an DLM from an instance.
@@ -38,18 +47,22 @@ module.exports = class DLMClientHelper {
      * @param  {string} role : the role of the DLM to create.
      * @returns response : the response of the request.
      */
-     async create(name, role) {
+     async create(name, role, type, policyName) {
 
         if (await this.exists(name)) {
             throw new DlmAlreadyExistException('Dlm already exists');
         }
 
-        //DML input
+        //most of policyDetails params are optional
+        //https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-dlm/modules/policydetails.html
+
         const input = {
+            'Name': policyName,
             'Description': 'DLM created by DLMHelper',            
             'ExecutionRoleArn': role,
             'PolicyDetails': {
-                'PolicyType': 'EBS_SNAPSHOT_MANAGEMENT',
+                'PolicyType': 'VOLUME_SNAPSHOT',
+                'ResourceType': type=='sna'?'AMI':'VOLUME',
                 'Schedule': {
                     'Frequency': 'Weekly',
                     'StartTime': '08:00',
@@ -72,6 +85,8 @@ module.exports = class DLMClientHelper {
                 }
             ]
         };
+     
+console.log(input);
            
          // Create the Policy
          const command = new CreateLifecyclePolicyCommand(input);
@@ -81,7 +96,7 @@ module.exports = class DLMClientHelper {
          } catch (error) {
              throw new DlmCreationException('Dlm creation failed');
          }
-
+console.log(response);
         return response;
     }
 
@@ -103,7 +118,19 @@ module.exports = class DLMClientHelper {
         return response;
     }
 
-    // #region Private methods
-    // #endregion
+    
+    /**
+     * This method is used to get the instance ID from an instance name.
+     * @param {*} name 
+     * @returns 
+     */
+     async getPolicyId(policyId) {
+        const instances = await this.findInstance(name);
+        return instances[0].Instances[0].InstanceId;
+    }
+
+
+   // #region Private methods
+   // #endregion
 
 }
