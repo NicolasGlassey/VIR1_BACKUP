@@ -45,24 +45,33 @@ module.exports = class DLMClientHelper {
 
         //DML input
         const input = {
-            'PolicyName': name,
-            'ResourceType': 'EBS_SNAPSHOT',
-            'PolicyType': 'EBS_SNAPSHOT_MANAGEMENT',
-            'TargetTags': [
+            'Description': 'DLM created by DLMHelper',            
+            'ExecutionRoleArn': role,
+            'PolicyDetails': {
+                'PolicyType': 'EBS_SNAPSHOT_MANAGEMENT',
+                'Schedule': {
+                    'Frequency': 'Weekly',
+                    'StartTime': '08:00',
+                    'Timezone': 'UTC'
+                },
+                'RetentionRules': [
+                    {
+                        'RetainRule': {
+                            'Count': 10,
+                            'Interval': 'Weekly'
+                        }
+                    }
+                ]
+            },
+            'State': 'ENABLED',
+            'Tags': [
                 {
                     'Key': 'Name',
                     'Value': name
                 }
-            ],
-            'Schedule': {
-                'Frequency': 'daily',
-                'StartTime': '08:00'
-
-            },
-            'ExecutionRoleArn': role,
-            'State': 'ENABLED'
-
+            ]
         };
+           
 
 
          // Create the Policy
@@ -76,5 +85,10 @@ module.exports = class DLMClientHelper {
 
         return response;
     }
+
+
+
+    // #region Private methods
+    // #endregion
 
 }
