@@ -96,6 +96,15 @@ test('exist_AllSnapshot_Success', async () => {
     expect(result.length).toBe(1);
 }
 )
+test('exist_AllSnapshot_ThrowException', async () => {
+    //given
+    volumeName = 'volumeNameNotExist';
+    //when
+    expect(async ()=> await snapshotHelper.findAllByVolume(volumeName)).rejects.toThrow(SnapshotVolumeNotFound);
+    //then
+    //Exception thrown
+}
+)
 test('hasMoreThanXSnapshotFromVolume_LessThanNumberOfSnapshot_Success', async () => {
 
     //given
@@ -108,6 +117,19 @@ test('hasMoreThanXSnapshotFromVolume_LessThanNumberOfSnapshot_Success', async ()
     //then
     expect(result).toBe(true);
 })
+test('hasMoreThanXSnapshotFromVolume_MoreThanNumberOfSnapshot_Success', async () => {
+
+    //given
+    volumeName = "jspasjd";
+    let numberOfSanpshot = 10;
+
+    //when
+    const result = await snapshotHelper.hasMoreThanXSnapshotFromVolume(volumeName, numberOfSanpshot);
+
+    //then
+    expect(result).toBe(false);
+})
+
 test('delete_AllSnapshotByVolume_Success', async()=>{
     //given
     volumeName= 'jspasjd';
@@ -117,6 +139,17 @@ test('delete_AllSnapshotByVolume_Success', async()=>{
     
     //then
     expect(await snapshotHelper.findAllByVolume(volumeName)).toEqual([]);
+
+
+})
+test('delete_AllSnapshotByVolume_ThrowException', async()=>{
+    //given
+    volumeName= 'volumeNameNotExist';
+    
+    //when
+    expect(async ()=> await snapshotHelper.deleteAllByVolume(volumeName)).rejects.toThrow(SnapshotNotFound);
+    //then
+    //Exception thrown
 
 
 })
