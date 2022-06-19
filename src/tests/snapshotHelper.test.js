@@ -19,12 +19,6 @@ beforeAll(async () => {
     snapshotHelper = new SnapshotHelper(clientRegionName);
     snapshotName = "";
     volumeName = "";
-    let listSnapshotsNames = [
-        "snapshot-jest-1",
-        "snapshot-jest-6",
-        "snapshot-jest-7"
-    ]
-    //await Promise.all(listAmiNames.map(async (name) => { await snapshotHelper.create('jspasjd', name); }));
     await snapshotHelper.create('jspasjd', 'snapshot-jest-1');
 });
 
