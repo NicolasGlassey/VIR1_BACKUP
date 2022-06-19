@@ -94,7 +94,11 @@ module.exports = class SnapshotHelper {
         return volume.VolumeId;
     }
     async findAllByVolume(volumeName) {
+        
         const volumeId = await this.getVolumeId(volumeName);
+        if (volumeId === undefined) {
+            throw new SnapshotVolumeNotFoundException('Volume not found');
+        }
         const config = {
             'Filters': [
                 { 'Name': 'volume-id', 'Values': [volumeId] }
@@ -119,6 +123,7 @@ module.exports = class SnapshotHelper {
         return responses;
     }
     async hasMoreThanXSnapshotFromVolume(volumeName, number){
+
         const snapshots = await this.findAllByVolume(volumeName);
 
         return snapshots.length >= number;
