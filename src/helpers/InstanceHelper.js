@@ -1,12 +1,10 @@
 /**
- * @file      Ami.js
  * @brief     This class is used to manage an AMI from an instance.
- * @author    Created by Anthony Bouillant
- * @date      2022-12-05
  * @url       https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/index.html
  */
 
 "use strict";
+
 const { EC2Client, DescribeInstancesCommand } = require("@aws-sdk/client-ec2");
 const InstanceNotFoundException = require("../exceptions/instance/InstanceNotFoundException.js");
 const { Logger, AwsCloudClientImpl } = require("vir1-core");
@@ -20,30 +18,13 @@ module.exports = class InstanceHelper {
     // #endregion
 
     // #region Public members
+
     /**
-     * @brief This method constructs an Ami object.
-     * @param {EC2Client} client : the client used to communicate with the AWS API. 
+     * @param {*} regionName 
      */
     constructor(regionName) {
         this.#awsCloudClientImpl = new AwsCloudClientImpl(regionName);
         this.#client = new EC2Client({ region: regionName });
-    }
-
-    /**
-     * This method is used to find an Instance.
-     * @param {*} name 
-     * @returns 
-     */
-    async #find(name) {
-        const input = {
-            'Filters': [
-                { 'Name': 'tag:Name', 'Values': [name] }
-            ]
-        }
-        const command = new DescribeInstancesCommand(input);
-        const response = await this.#client.send(command);
-
-        return response.Reservations;
     }
 
     /**
@@ -63,9 +44,25 @@ module.exports = class InstanceHelper {
 
         return instances[0].Instances[0].InstanceId;
     }
-
     // #endregion
 
     // #region Private methods
+
+    /**
+     * This method is used to find an Instance.
+     * @param {*} name 
+     * @returns 
+     */
+    async #find(name) {
+        const input = {
+            'Filters': [
+                { 'Name': 'tag:Name', 'Values': [name] }
+            ]
+        }
+        const command = new DescribeInstancesCommand(input);
+        const response = await this.#client.send(command);
+
+        return response.Reservations;
+    }
     // #endregion
 }

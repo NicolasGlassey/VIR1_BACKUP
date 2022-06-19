@@ -1,17 +1,15 @@
 /**
- * @file      Ami.js
  * @brief     This class is used to manage an AMI from an instance.
- * @author    Created by Anthony Bouillant
- * @date      2022-12-05
  * @url       https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/index.html
  */
 
 "use strict";
+
 const { EC2Client, CreateImageCommand, DeregisterImageCommand, DescribeImagesCommand, DescribeInstancesCommand } = require("@aws-sdk/client-ec2");
 const InstanceNotFoundException = require("../exceptions/instance/InstanceNotFoundException.js");
 const AmiNotFoundException = require("../exceptions/ami/AmiNotFoundException.js");
 const AmiAlreadyExistException = require("../exceptions/ami/AmiAlreadyExistException.js");
-const InvalidNumberException = require("../exceptions/InvalidNumberException.js");
+const AmiInvalidNumberException = require("../exceptions/ami/AmiInvalidNumberException.js");
 const InstanceHelper = require("./InstanceHelper.js");
 const { Logger, AwsCloudClientImpl } = require("vir1-core");
 
@@ -21,37 +19,18 @@ module.exports = class AmiHelper {
     // #region Private members
     #client;
     #awsCloudClientImpl;
-    #instance;
+    #instanceHelper;
     // #endregion
 
     // #region Public members
+
     /**
-     * @brief This method constructs an Ami object.
-     * @param {EC2Client} client : the client used to communicate with the AWS API. 
+     * @param {*} regionName 
      */
     constructor(regionName) {
         this.#awsCloudClientImpl = new AwsCloudClientImpl(regionName);
         this.#client = new EC2Client({ region: regionName });
-        this.#instance = new InstanceHelper(regionName);
-    }
-
-    /**
-     * @brief This method is used to find an AMI.
-     * @param {string} name : the name of the AMI to find. 
-     * @returns {object} ami : the AMI found.
-     */
-    async #find(name) {
-        const config = {
-            'Filters': [
-                { 'Name': 'name', 'Values': [name] }
-            ]
-        }
-
-        // Find the image
-        const commandDescribeImages = new DescribeImagesCommand(config);
-        const response = await this.#client.send(commandDescribeImages);
-
-        return response.Images[0];
+        this.#instanceHelper = new InstanceHelper(regionName);
     }
 
     /**
@@ -72,7 +51,7 @@ module.exports = class AmiHelper {
             throw new AmiAlreadyExistException(`Image ${name} already exists`);
         }
 
-        let instanceId = await this.#instance.instanceId(instanceName).catch(err => {
+        let instanceId = await this.#instanceHelper.instanceId(instanceName).catch(err => {
             throw err;
         })
 
@@ -142,7 +121,7 @@ module.exports = class AmiHelper {
             throw new InstanceNotFoundException(`Instance ${instanceName} does not exist`);
         }
 
-        let instanceId = await this.#instance.instanceId(instanceName).catch(err => {
+        let instanceId = await this.#instanceHelper.instanceId(instanceName).catch(err => {
             throw err;
         });
 
@@ -187,7 +166,7 @@ module.exports = class AmiHelper {
 
         if (isNaN(number)) {
             await this.#awsCloudClientImpl.log(`AmiHelper.hasMoreThanXAmiFromInstance: Number ${number} is not a number`, Logger.ERROR);
-            throw new InvalidNumberException(`Number ${number} is not a number`);
+            throw new AmiInvalidNumberException(`Number ${number} is not a number`);
         }
 
         const amis = await this.describeFromInstance(instanceName);
@@ -198,5 +177,24 @@ module.exports = class AmiHelper {
     // #endregion
 
     // #region Private methods
+
+    /**
+     * @brief This method is used to find an AMI.
+     * @param {string} name : the name of the AMI to find. 
+     * @returns response: the image
+     */
+    async #find(name) {
+        const config = {
+            'Filters': [
+                { 'Name': 'name', 'Values': [name] }
+            ]
+        }
+
+        // Find the image
+        const commandDescribeImages = new DescribeImagesCommand(config);
+        const response = await this.#client.send(commandDescribeImages);
+
+        return response.Images[0];
+    }
     // #endregion
 }
