@@ -4,29 +4,32 @@
 package "Backup"{
     'classes and interfaces
     class AmiHelper{
-        +Constructor(string : regionName)
-        -Find(string : name): object
-        +Create(string : name, string : instanceName):object
-        +Delete(string : name)
-        +DescribeFromInstance(string: instanceName):array
-        +DeleteFromInstance(string: instanceName)
+        +constructor(string : regionName)
+        -find(string : name):object
+        +create(string : name, string : instanceName):object
+        +delete(string : name):void
+        +describeFromInstance(string: instanceName):array
+        +deleteFromInstance(string: instanceName): void
         +hasMoreThanXAmiFromInstance(string : instanceName,int : number):bool
     }
 
     class SnapshotHelper{
-        +Constructor(awsClient : AwsCloudClientImpl)
-        -Find(string : name):object
-        +Create(int: volumeID, string : name, string : Description =""):object
-        +Delete(string : name)
-        +FindVolume(string : name):object
-        +GetVolumeId(string : name): int
-        +FindAllByVolume(string : volumeName): array
+        +constructor(string : regionName)
+        -find(string : name):object
+        -findVolume(string : name):object
+        +exists(string : name):bool
+        +create(int: volumeID, string : name, string : description = null):object
+        +delete(string : name):void
+        +getVolumeId(string : name):string
+        +findAllByVolume(string : volumeName):array
+        +deleteAllByVolume(string : volumeName):void
+        +hasMoreThanXSnapshotFromVolume(string : volumeName,int : number):bool
     }
 
     class InstanceHelper{
-        +Constructor(string : regionName)
-        -Find(string : name): object
-        +instanceId(string : name): int
+        +constructor(string : regionName)
+        -find(string : name):object
+        +instanceId(string : name):string
 
     }
 
