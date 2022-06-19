@@ -4,13 +4,10 @@ const InstanceHelper = require("../helpers/InstanceHelper");
 const InstanceNotFoundException = require("../exceptions/instance/InstanceNotFoundException");
 const { AwsCloudClientImpl } = require("vir1-core");
 
-let instanceHelper, instanceName, expectedResult, awsCloudClientImpl;
+let instanceHelper, instanceName, expectedResult;
 
 beforeAll(async () => {
-    const awsRegion = 'eu-west-3';
-    awsCloudClientImpl = await AwsCloudClientImpl.initialize(awsRegion);
-    instanceHelper = new InstanceHelper(awsRegion);
-    instanceName = "";
+    instanceHelper = new InstanceHelper('eu-west-3');
 }, 10000);
 
 test('instanceId_ExistingInstanceName_Success', async () => {

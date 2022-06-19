@@ -11,11 +11,9 @@ const pluck = (arr, key) => arr.map(i => i[key]);
 let ami, amiName, expectedResult, instanceName, awsCloudClientImpl;
 
 beforeAll(async () => {
-    const awsRegion = 'eu-west-3';
-    instanceName = "WINDOWS_INSTANCE";
-    awsCloudClientImpl = await AwsCloudClientImpl.initialize(awsRegion);
-    ami = new AmiHelper(awsRegion);
-    await ami.deleteFromInstance(instanceName);
+    ami = new AmiHelper('eu-west-3');
+    await ami.deleteFromInstance('WINDOWS_INSTANCE');
+    awsCloudClientImpl = await AwsCloudClientImpl.initialize('eu-west-3');
 }, 10000);
 
 test('create_ExistingInstanceName_Success', async () => {
@@ -75,12 +73,14 @@ test('delete_NonExistingImage_ThrowException', async () => {
 })
 
 describe('IMAGE_ROTATION', () => {
+    let numberOfAmis;
     beforeAll(async () => {
         let listAmiNames = [
             "team-backup-ami-jest-1",
             "team-backup-ami-jest-2",
             "team-backup-ami-jest-3"
         ]
+        instanceName = "WINDOWS_INSTANCE";
 
         // Create AMIs for the test if they don't exist
         await Promise.all(listAmiNames.map(async (name) => { if (!await awsCloudClientImpl.exists(AwsCloudClientImpl.IMAGE, name)) await ami.create(name, instanceName); }));
@@ -113,36 +113,45 @@ describe('IMAGE_ROTATION', () => {
 
         //when
         await expect(ami.describeFromInstance(instanceName)).rejects.toThrow(InstanceNotFoundException);
+
+        //then
+        //Exception thrown
     })
 
     test('hasMoreThanXAmiFromInstance_NonExistingInstance_ThrowException', async () => {
 
         //given
         instanceName = "non-existing-instance";
-        const numberOfAmi = 3;
+        numberOfAmis = 3;
 
         //when
-        await expect(ami.hasMoreThanXAmiFromInstance(instanceName, numberOfAmi)).rejects.toThrow(InstanceNotFoundException);
+        await expect(ami.hasMoreThanXAmiFromInstance(instanceName, numberOfAmis)).rejects.toThrow(InstanceNotFoundException);
+
+        //then
+        //Exception thrown
     })
 
     test('hasMoreThanXAmiFromInstance_IncorrectNumber_ThrowException', async () => {
 
         //given
         instanceName = "WINDOWS_INSTANCE";
-        const incorrectNumber = 'INCORRECT_NUMBER';
+        numberOfAmis = "INCORRECT_NUMBER";
 
         //when
-        await expect(ami.hasMoreThanXAmiFromInstance(instanceName, incorrectNumber)).rejects.toThrow(AmiInvalidNumberException);
+        await expect(ami.hasMoreThanXAmiFromInstance(instanceName, numberOfAmis)).rejects.toThrow(AmiInvalidNumberException);
+
+        //then
+        //Exception thrown
     })
 
     test('hasMoreThanXAmiFromInstance_LessThanNumberOfAmi_Success', async () => {
 
         //given
         instanceName = "WINDOWS_INSTANCE";
-        const numberOfAmi = 2;
+        numberOfAmis = 2;
 
         //when
-        const result = await ami.hasMoreThanXAmiFromInstance(instanceName, numberOfAmi);
+        const result = await ami.hasMoreThanXAmiFromInstance(instanceName, numberOfAmis);
 
         //then
         expect(result).toBe(true);
@@ -152,14 +161,27 @@ describe('IMAGE_ROTATION', () => {
 
         //given
         instanceName = "WINDOWS_INSTANCE";
-        const numberOfAmi = 10;
+        numberOfAmis = 10;
 
         //when
-        const result = await ami.hasMoreThanXAmiFromInstance(instanceName, numberOfAmi);
+        const result = await ami.hasMoreThanXAmiFromInstance(instanceName, numberOfAmis);
 
         //then
         expect(result).toBe(false);
     })
+
+    test('deleteFromInstance_NonExistingInstance_ThrowException', async () => {
+
+        //given
+        instanceName = "non-existing-instance";
+        expectedResult = [];
+
+        //when
+        await expect(ami.deleteFromInstance(instanceName)).rejects.toThrow(InstanceNotFoundException);
+
+        //then
+        //Exception thrown
+    }, 10000);
 
     test('deleteFromInstance_ExistingInstance_Success', async () => {
 
@@ -172,16 +194,6 @@ describe('IMAGE_ROTATION', () => {
 
         //then
         expect(await ami.describeFromInstance(instanceName)).toEqual(expectedResult);
-    }, 10000);
-
-    test('deleteFromInstance_NonExistingInstance_ThrowException', async () => {
-
-        //given
-        instanceName = "non-existing-instance";
-        expectedResult = [];
-
-        //when
-        await expect(ami.deleteFromInstance(instanceName)).rejects.toThrow(InstanceNotFoundException);
     }, 10000);
 
 })
