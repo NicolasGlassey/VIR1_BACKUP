@@ -1,8 +1,8 @@
-const { EC2Client, CreateSnapshotCommand, DeleteSnapshotCommand, DescribeSnapshotsCommand, DescribeVolumesCommand } = require("@aws-sdk/client-ec2");
-const SnapshotAlreadyExistException = require("./exceptions/SnapshotAlreadyExistException");
-const SnapshotNotFoundException = require("./exceptions/SnapshotNotFoundException");
-const SnapshotNotCreatedException = require("./exceptions/SnapshotNotCreatedException");
-const SnapshotVolumeNotFoundException = require("./exceptions/SnapshotVolumeNotFoundException");
+const { EC2Client, CreateSnapshotsCommand, CreateSnapshotCommand, DeleteSnapshotCommand, DescribeSnapshotsCommand, DescribeVolumesCommand } = require("@aws-sdk/client-ec2");
+const SnapshotAlreadyExistException = require("../exceptions/snapshot/SnapshotAlreadyExistException");
+const SnapshotNotFoundException = require("../exceptions/snapshot/SnapshotNotFoundException");
+const SnapshotNotCreatedException = require("../exceptions/snapshot/SnapshotNotCreatedException");
+const SnapshotVolumeNotFoundException = require("../exceptions/snapshot/SnapshotVolumeNotFoundException");
 
 module.exports = class SnapshotHelper {
     #client;
@@ -97,15 +97,30 @@ module.exports = class SnapshotHelper {
         const volumeId = await this.getVolumeId(volumeName);
         const config = {
             'Filters': [
-                { 'Name': 'volume-id', 'Values': ['vol-0374331df1484b5b1'] }
+                { 'Name': 'volume-id', 'Values': [volumeId] }
             ]
         };
         const response = await this.#client.send(new DescribeSnapshotsCommand(config));
 
         return response.Snapshots;
     }
-    async findAllSnapshotsByVolume(volumeName) {
+    async deleteAllByVolume(volumeName)
+    {
+        const snapshots =  await this.findAllByVolume(volumeName);
 
-
+        if (snapshots === undefined) {
+            throw new SnapshotNotFoundException('Snapshot not found');
+        }
+        let responses = []
+        for(const element of snapshots){
+           responses.push( await this.delete(element.Tags[0].Value));
+        }
+    
+        return responses;
     }
+    async hasMoreThanXSnapshotFromVolume(volumeName, number){
+        const snapshots = await this.findAllByVolume(volumeName);
+
+        return snapshots.length >= number;
+    } 
 }
