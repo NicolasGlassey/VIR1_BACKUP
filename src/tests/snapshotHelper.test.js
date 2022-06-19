@@ -1,5 +1,5 @@
 /**
- * Author : Hélène Dubuis
+ * Author : Noah Delgado
  * Date : 12.05.2022
  * Description : Test the SnapshotHelper Class
  */

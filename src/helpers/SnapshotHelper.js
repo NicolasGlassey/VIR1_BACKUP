@@ -1,3 +1,8 @@
+/**
+ * Author : Noah Delgado
+ * Date : 12.05.2022
+ * Description : SnapshotHelper Class
+ */
 const { EC2Client, CreateSnapshotsCommand, CreateSnapshotCommand, DeleteSnapshotCommand, DescribeSnapshotsCommand, DescribeVolumesCommand } = require("@aws-sdk/client-ec2");
 const SnapshotAlreadyExistException = require("../exceptions/snapshot/SnapshotAlreadyExistException");
 const SnapshotNotFoundException = require("../exceptions/snapshot/SnapshotNotFoundException");
