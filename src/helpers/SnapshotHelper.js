@@ -5,12 +5,20 @@ const SnapshotNotCreatedException = require("../exceptions/snapshot/SnapshotNotC
 const SnapshotVolumeNotFoundException = require("../exceptions/snapshot/SnapshotVolumeNotFoundException");
 
 module.exports = class SnapshotHelper {
+    // #region Private members
     #client;
-
+    // #endRegion
+    /**
+     * @param {*} regionName 
+     */
     constructor(regionName) {
         this.#client = new EC2Client({ region: regionName });
     }
-
+    /**
+     * @breif This methode is used to find snapshot by name
+     * @param {string} name : the name of the snapshot
+     * @returns response : the response of the request
+     */
     async find(name) {
         const config = {
             'Filters': [
@@ -22,10 +30,22 @@ module.exports = class SnapshotHelper {
 
         return response.Snapshots[0];
     }
+    /**
+     * @breif This methode is used to check if a snapshot exist by name
+     * @param {string} name : the name of the snapshot
+     * @returns bool
+     */
     async exists(name) {
         const snapshot = await this.find(name);
         return snapshot !== undefined;
     }
+    /**
+     * @breif This methode is used to create a snapshot by is volume name , is name and description
+     * @param {*} volumeName 
+     * @param {*} name : the name of the snapshot
+     * @param {*} description : the description of the snapshot
+     * @returns response : the response of the request
+     */
     async create(volumeName, name, description = null) {
         if (await this.exists(name)) {
             throw new SnapshotAlreadyExistException('Snapshot already exists');
@@ -56,7 +76,11 @@ module.exports = class SnapshotHelper {
 
         return result;
     }
-
+    /**
+     * @breif This methode is used to delete a snapshot by is name
+     * @param {string} name : the name of the snapshot
+     * @returns result : the result of the request
+     */
     async delete(name) {
         const snapshot = await this.find(name);
 
@@ -73,6 +97,11 @@ module.exports = class SnapshotHelper {
 
         return result;
     }
+    /**
+     * @breif This methode is used to find a volume by is name
+     * @param {*} name : volume name
+     * @returns response : the response of the request
+     */
     async findVolume(name) {
         const input = {
             'Filters': [
@@ -84,6 +113,11 @@ module.exports = class SnapshotHelper {
 
         return response.Volumes[0];
     }
+    /**
+     * @breif This methode is used to find a volume id by is name
+     * @param {*} name : volume name
+     * @returns volume.VolumeId : id of the volume
+     */
     async getVolumeId(name) {
         const volume = await this.findVolume(name);
 
@@ -93,6 +127,11 @@ module.exports = class SnapshotHelper {
 
         return volume.VolumeId;
     }
+    /**
+     * @breif This methode is used to find all snapshots by volume name
+     * @param {*} volumeName 
+     * @returns response.Snapshots : array of snapshot
+     */
     async findAllByVolume(volumeName) {
         
         const volumeId = await this.getVolumeId(volumeName);
@@ -108,6 +147,11 @@ module.exports = class SnapshotHelper {
 
         return response.Snapshots;
     }
+    /**
+     * @breif This methode is used to delete all snapshots by volume name
+     * @param {*} volumeName 
+     * @returns responses : array of response of delete
+     */
     async deleteAllByVolume(volumeName)
     {
         const snapshots =  await this.findAllByVolume(volumeName);
@@ -122,6 +166,12 @@ module.exports = class SnapshotHelper {
     
         return responses;
     }
+    /**
+     * @breif This methode is used to check if a volume has more all snapshots than a x value
+     * @param {*} volumeName 
+     * @param {*} number 
+     * @returns bool
+     */
     async hasMoreThanXSnapshotFromVolume(volumeName, number){
 
         const snapshots = await this.findAllByVolume(volumeName);
