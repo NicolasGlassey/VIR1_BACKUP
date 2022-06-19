@@ -54,6 +54,13 @@ package "Backup"{
         +Create(int: volumeID, string : name, string : Description =""):object
         +Delete(string : name)
     }
+    
+    class DmlHelper{
+        +Constructor(awsClient : AwsCloudClientImpl)
+        +Exists(int : id):boolean
+        +Find(string : name):object
+        +Create(string : name, string : role, string :type,string : instanceName):object
+        +Delete(int : id)
 
     class AmiException{}
     class AmiAlreadyExistsException{}
@@ -68,6 +75,12 @@ package "Backup"{
     class SnapshotAlreadyExistException{}
     class SnapshotNotCreatedException{}
     class SnapshotVolumeNotFoundException{}
+
+    class DlmException{}
+    class DlmNotFoundException{}
+    class DlmAlreadyExistException{}
+    class DlmCreatedException{}
+    class DlmDeleteException{}
 
     'relations
 
@@ -93,6 +106,15 @@ package "Backup"{
     SnapshotHelper ..> SnapshotVolumeNotFoundException :throw
     SnapshotHelper ..> SnapshotAlreadyExistException :throw
     SnapshotHelper ..> SnapshotNotFoundException :throw
+
+    DlmException <|-- DlmNotFoundException
+    DlmException <|-- DlmAlreadyExistException
+    DlmException <|-- DlmCreatedException
+    DlmException <|-- DlmDeleteException
+
+    DmlHelper ..> DlmAlreadyExistException :throw
+    DmlHelper ..> DlmCreatedException :throw
+    DmlHelper ..> DlmDeleteException :throw
 
 
 

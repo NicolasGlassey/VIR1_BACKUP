@@ -41,13 +41,17 @@ module.exports = class Dml {
       
     }
 
+    async find(name) {
+        //todo
+    }
+
     /**
      * @brief This method is used to create an DLM from an instance.
      * @param {string} name : the name of the DLM to create. 
      * @param  {string} role : the role of the DLM to create.
      * @returns response : the response of the request.
      */
-     async create(name, role, type, policyName) {
+     async create(name, role, type, instanceName) {
 
         if (await this.exists(name)) {
             throw new DlmAlreadyExistException('Dlm already exists');
@@ -57,7 +61,7 @@ module.exports = class Dml {
         //https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-dlm/modules/policydetails.html
 
         const input = {
-            'Name': policyName,
+            'Name': name,
             'Description': 'DLM created by DLMHelper',            
             'ExecutionRoleArn': role,
             'PolicyDetails': {
@@ -81,12 +85,11 @@ module.exports = class Dml {
             'Tags': [
                 {
                     'Key': 'Name',
-                    'Value': name
+                    'Value': instanceName
                 }
             ]
         };
      
-console.log(input);
            
          // Create the Policy
          const command = new CreateLifecyclePolicyCommand(input);
@@ -96,7 +99,6 @@ console.log(input);
          } catch (error) {
              throw new DlmCreationException('Dlm creation failed');
          }
-console.log(response);
         return response;
     }
 
